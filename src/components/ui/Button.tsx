@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Button Component
-// WCAG 2.5 AAA Compliant
+// Fixed for Tailwind v4
 // ============================================
 
 import { forwardRef } from 'react';
@@ -30,23 +30,23 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] disabled:pointer-events-none disabled:opacity-50';
+      "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:pointer-events-none disabled:opacity-50";
 
     const variants = {
       primary:
-        'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary-hover)] focus-visible:ring-[var(--color-primary)] shadow-md hover:shadow-lg hover:shadow-[var(--color-primary)]/20',
+        "bg-indigo-500 text-white hover:bg-indigo-600 focus-visible:ring-indigo-500 shadow-md hover:shadow-lg hover:shadow-indigo-500/20",
       secondary:
-        'bg-[var(--color-background-alt)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:border-[var(--color-border-hover)] hover:bg-[var(--color-background-elevated)] focus-visible:ring-[var(--color-border)]',
+        "bg-zinc-900 text-white border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 focus-visible:ring-zinc-500",
       outline:
-        'border-2 border-[var(--color-primary)] text-[var(--color-primary)] bg-transparent hover:bg-[var(--color-primary)]/10 focus-visible:ring-[var(--color-primary)]',
+        "border-2 border-indigo-500 text-indigo-500 bg-transparent hover:bg-indigo-500/10 focus-visible:ring-indigo-500",
       ghost:
-        'text-[var(--color-foreground)] hover:bg-[var(--color-background-alt)] focus-visible:ring-[var(--color-border)]',
+        "text-zinc-400 hover:text-white hover:bg-zinc-900 focus-visible:ring-zinc-500",
     };
 
     const sizes = {
-      sm: 'h-8 px-3 text-sm',
-      md: 'h-10 px-4 text-base min-w-[44px]',
-      lg: 'h-12 px-6 text-lg',
+      sm: "h-8 px-3 text-sm",
+      md: "h-10 px-4 text-base min-w-[44px]",
+      lg: "h-12 px-6 text-base",
     };
 
     return (
@@ -54,41 +54,21 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         ref={ref}
         disabled={disabled || isLoading}
-        aria-disabled={disabled || isLoading}
-        aria-busy={isLoading}
         {...props}
       >
         {isLoading ? (
           <>
-            <svg
-              className="animate-spin h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
-            <span className="sr-only">Loading</span>
             <span>{children}</span>
           </>
         ) : (
           <>
-            {leftIcon && <span aria-hidden="true">{leftIcon}</span>}
+            {leftIcon && <span>{leftIcon}</span>}
             {children}
-            {rightIcon && <span aria-hidden="true">{rightIcon}</span>}
+            {rightIcon && <span>{rightIcon}</span>}
           </>
         )}
       </button>
@@ -99,4 +79,3 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button };
-export type { ButtonProps };

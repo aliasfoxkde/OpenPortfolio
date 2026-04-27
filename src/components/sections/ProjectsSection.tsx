@@ -1,8 +1,6 @@
 // ============================================
 // OpenPortfolio - Projects Section
-// Filterable grid with flip card projects
-// Optimized search with useDeferredValue
-// WCAG 2.5 AAA Compliant
+// Simplified with proper Tailwind v4 classes
 // ============================================
 
 import { useState, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
@@ -12,21 +10,18 @@ import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
 import { Badge, LanguageBadge, CategoryBadge, StatusBadge } from '@/components/ui/Badge';
 import { allProjects, projectCategories, githubProfile } from '@/data/projects';
-import type { Project, ProjectCategory } from '@/lib/types';
 import { cn, formatNumber } from '@/lib/utils';
 
 // ============================================
-// Project Card Component (Flippable)
+// Project Card Component
 // ============================================
 
 interface ProjectCardProps {
-  project: Project;
+  project: (typeof allProjects)[number];
   index: number;
 }
 
 function ProjectCard({ project, index }: ProjectCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
-
   const categoryColor = projectCategories.find((c) => c.value === project.category)?.color;
 
   return (
@@ -34,149 +29,86 @@ function ProjectCard({ project, index }: ProjectCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.3 }}
-      className="h-full"
+      className="group relative"
     >
-      <div
-        className="relative h-full min-h-[280px] cursor-pointer"
-        onClick={() => setIsFlipped(!isFlipped)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setIsFlipped(!isFlipped);
-          }
-        }}
-        role="button"
-        tabIndex={0}
-        aria-pressed={isFlipped}
-        aria-label={`${project.name} project card. Click to see more details.`}
-      >
-        {/* Card Container with 3D flip */}
-        <div
-          className={cn(
-            'relative w-full h-full transition-transform duration-300 ease-out preserve-3d',
-            isFlipped ? 'rotate-y-180' : ''
-          )}
-          style={{
-            transformStyle: 'preserve-3d',
-            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-          }}
-        >
-          {/* Front Face */}
-          <div
-            className="absolute inset-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-background-alt)] p-5 flex flex-col backface-hidden"
-            style={{ backfaceVisibility: 'hidden' }}
-          >
-            {/* Category & Status */}
-            <div className="flex items-center justify-between mb-3">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 h-full flex flex-col transition-all duration-300 hover:border-indigo-500/50 hover:bg-zinc-900">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
               <CategoryBadge
                 category={projectCategories.find((c) => c.value === project.category)?.label || project.category}
                 color={categoryColor}
                 size="sm"
               />
-              {project.status && (
-                <StatusBadge status={project.status} showLabel={false} />
-              )}
+              {project.status && <StatusBadge status={project.status} showLabel={false} />}
             </div>
-
-            {/* Project Name */}
-            <h3 className="text-lg font-bold text-[var(--color-foreground)] mb-2 line-clamp-1">
+            <h3 className="text-lg font-semibold text-white truncate">
               {project.name}
             </h3>
+          </div>
+        </div>
 
-            {/* Description */}
-            <p className="text-sm text-[var(--color-foreground-muted)] line-clamp-3 flex-1">
-              {project.description}
-            </p>
+        {/* Description */}
+        <p className="text-sm text-zinc-400 flex-1 line-clamp-3 mb-3">
+          {project.description}
+        </p>
 
-            {/* Language */}
-            <div className="mt-3 mb-2">
-              {project.language && <LanguageBadge language={project.language} />}
-            </div>
+        {/* Tech Stack Tags */}
+        {project.techStack && project.techStack.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {project.techStack.slice(0, 3).map((tech) => (
+              <Badge key={tech} variant="default" size="sm">
+                {tech}
+              </Badge>
+            ))}
+            {project.techStack.length > 3 && (
+              <Badge variant="default" size="sm">+{project.techStack.length - 3}</Badge>
+            )}
+          </div>
+        )}
 
-            {/* Stars */}
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-4 pt-3 border-t border-zinc-800">
+          <div className="flex items-center gap-3 text-xs text-zinc-500">
+            {project.language && <LanguageBadge language={project.language} />}
             {project.stars > 0 && (
-              <div className="flex items-center gap-3 text-sm text-[var(--color-foreground-subtle)]">
-                <span className="flex items-center gap-1">
-                  <Icon name="star" size={14} />
-                  {formatNumber(project.stars)}
-                </span>
-                {project.forks > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Icon name="fork" size={14} />
-                    {formatNumber(project.forks)}
-                  </span>
-                )}
-              </div>
+              <span className="flex items-center gap-1">
+                <Icon name="star" size={12} />
+                {formatNumber(project.stars)}
+              </span>
             )}
-
-            {/* Flip hint */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-1 text-xs text-[var(--color-foreground-subtle)] opacity-50">
-              <Icon name="move" size={10} />
-            </div>
+            {project.forks > 0 && (
+              <span className="flex items-center gap-1">
+                <Icon name="fork" size={12} />
+                {formatNumber(project.forks)}
+              </span>
+            )}
           </div>
+        </div>
 
-          {/* Back Face */}
-          <div
-            className="absolute inset-0 rounded-xl border border-[var(--color-primary)]/50 bg-[var(--color-background-elevated)] p-5 flex flex-col backface-hidden"
-            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+        {/* Links */}
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Icon name="github" size={14} />}
+            onClick={() => window.open(project.htmlUrl, '_blank', 'noopener')}
+            className="flex-1"
           >
-            {/* Tech Stack */}
-            {project.techStack && project.techStack.length > 0 && (
-              <div className="mb-3">
-                <h4 className="text-xs font-semibold text-[var(--color-foreground-muted)] uppercase tracking-wider mb-2">
-                  Tech Stack
-                </h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.techStack.slice(0, 3).map((tech) => (
-                    <Badge key={tech} variant="primary" size="sm">
-                      {tech}
-                    </Badge>
-                  ))}
-                  {project.techStack.length > 3 && (
-                    <Badge variant="default" size="sm">
-                      +{project.techStack.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Links */}
-            <div className="flex flex-col gap-2 mt-auto">
-              <Button
-                variant="primary"
-                size="sm"
-                leftIcon={<Icon name="github" size={14} />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(project.htmlUrl, '_blank', 'noopener');
-                }}
-                className="w-full"
-              >
-                View on GitHub
-              </Button>
-
-              {project.deploymentUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  leftIcon={<Icon name="globe" size={14} />}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(project.deploymentUrl, '_blank', 'noopener');
-                  }}
-                  className="w-full"
-                >
-                  Live Demo
-                </Button>
-              )}
-            </div>
-
-            {/* Flip back hint */}
-            <div className="absolute bottom-3 left-3 flex items-center gap-1 text-xs text-[var(--color-foreground-subtle)] opacity-50">
-              <Icon name="move" size={10} />
-            </div>
-          </div>
+            GitHub
+          </Button>
+          {project.deploymentUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<Icon name="globe" size={14} />}
+              onClick={() => window.open(project.deploymentUrl, '_blank', 'noopener')}
+              className="flex-1"
+            >
+              Live
+            </Button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -184,40 +116,25 @@ function ProjectCard({ project, index }: ProjectCardProps) {
 }
 
 // ============================================
-// Search Input Component
+// Search Input
 // ============================================
 
-interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-function SearchInput({ value, onChange }: SearchInputProps) {
+function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div
-      className={cn(
-        'relative flex items-center w-full max-w-md rounded-lg border bg-[var(--color-background-alt)] transition-colors',
-        'focus-within:border-[var(--color-primary)]',
-        'border-[var(--color-border)]'
-      )}
-    >
-      <Icon
-        name="code"
-        size={18}
-        className="absolute left-3 text-[var(--color-foreground-muted)]"
-      />
+    <div className="relative w-full max-w-md">
+      <Icon name="code" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search projects..."
-        className="w-full pl-10 pr-10 py-2.5 bg-transparent text-[var(--color-foreground)] placeholder:text-[var(--color-foreground-subtle)] focus:outline-none text-sm"
+        className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
         aria-label="Search projects"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 p-1 rounded-full hover:bg-[var(--color-background-elevated)] text-[var(--color-foreground-muted)]"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-500 hover:text-white hover:bg-zinc-800"
           aria-label="Clear search"
         >
           <Icon name="x" size={14} />
@@ -228,202 +145,154 @@ function SearchInput({ value, onChange }: SearchInputProps) {
 }
 
 // ============================================
-// Filter Button Component
+// Category Filter
 // ============================================
 
-interface FilterButtonProps {
-  category: (typeof projectCategories)[number];
-  isSelected: boolean;
-  onClick: () => void;
-  count: number;
-}
-
-function FilterButton({ category, isSelected, onClick, count }: FilterButtonProps) {
+function CategoryFilter({
+  selected,
+  onSelect,
+  counts,
+}: {
+  selected: string;
+  onSelect: (v: string) => void;
+  counts: Record<string, number>;
+}) {
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200',
-        isSelected
-          ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-md'
-          : 'bg-[var(--color-background-alt)] text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-elevated)] border border-[var(--color-border)]'
-      )}
-      aria-pressed={isSelected}
-    >
-      <span
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: isSelected ? 'white' : category.color }}
-      />
-      <span>{category.label}</span>
-      <span
-        className={cn(
-          'px-1.5 py-0.5 rounded-full text-xs',
-          isSelected ? 'bg-white/20' : 'bg-[var(--color-background-elevated)]'
-        )}
-      >
-        {count}
-      </span>
-    </button>
+    <div className="flex flex-wrap justify-center gap-2">
+      {projectCategories.map((cat) => (
+        <button
+          key={cat.value}
+          onClick={() => onSelect(cat.value)}
+          className={cn(
+            "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border",
+            selected === cat.value
+              ? "bg-indigo-500 text-white border-indigo-500"
+              : "bg-zinc-900/50 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
+          )}
+          aria-pressed={selected === cat.value}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ backgroundColor: selected === cat.value ? 'white' : cat.color }}
+          />
+          <span>{cat.label}</span>
+          <span className={cn(
+            "px-1.5 py-0.5 rounded-full text-xs",
+            selected === cat.value ? "bg-white/20" : "bg-zinc-800"
+          )}>
+            {counts[cat.value] || 0}
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }
 
 // ============================================
-// Empty State Component
+// Empty State
 // ============================================
 
-function EmptyState({ searchQuery, onClearSearch }: { searchQuery: string; onClearSearch: () => void }) {
+function EmptyState({ onClear }: { onClear: () => void }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center py-16 text-center"
-    >
-      <Icon name="folder" size={40} className="text-[var(--color-foreground-subtle)] mb-4" />
-      <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-        No projects found
-      </h3>
-      <p className="text-sm text-[var(--color-foreground-muted)] mb-4">
-        {searchQuery ? `No projects match "${searchQuery}"` : 'No projects in this category'}
-      </p>
-      {searchQuery && (
-        <Button variant="outline" size="sm" onClick={onClearSearch}>
-          Clear Search
-        </Button>
-      )}
-    </motion.div>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <Icon name="folder" size={40} className="text-zinc-600 mb-4" />
+      <h3 className="text-lg font-semibold text-white mb-2">No projects found</h3>
+      <p className="text-sm text-zinc-500 mb-4">Try adjusting your search or filter</p>
+      <Button variant="outline" size="sm" onClick={onClear}>Clear Search</Button>
+    </div>
   );
 }
 
 // ============================================
-// Main Projects Section Component
+// Main Projects Section
 // ============================================
 
 export function ProjectsSection() {
-  const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchInput, setSearchInput] = useState('');
-
-  // Use deferred value for search to keep UI responsive
   const deferredSearch = useDeferredValue(searchInput);
-
-  // Track pending state for visual feedback
   const [isPending, startTransition] = useTransition();
 
-  // Handle category change with transition
-  const handleCategoryChange = useCallback((category: ProjectCategory) => {
-    startTransition(() => {
-      setSelectedCategory(category);
-    });
+  const handleCategoryChange = useCallback((cat: string) => {
+    startTransition(() => setSelectedCategory(cat));
   }, []);
 
-  // Handle search change
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchInput(value);
-  }, []);
-
-  // Filter projects - memoized for performance
   const filteredProjects = useMemo(() => {
     return allProjects.filter((project) => {
-      // Category filter
       const categoryMatch = selectedCategory === 'all' || project.category === selectedCategory;
-
-      // Search filter - use deferred value
+      
       if (!deferredSearch) return categoryMatch;
-
-      const searchLower = deferredSearch.toLowerCase();
+      
+      const search = deferredSearch.toLowerCase();
       const searchMatch =
-        project.name.toLowerCase().includes(searchLower) ||
-        project.description.toLowerCase().includes(searchLower) ||
-        project.language?.toLowerCase().includes(searchLower) ||
-        project.topics.some((t) => t.toLowerCase().includes(searchLower));
-
+        project.name.toLowerCase().includes(search) ||
+        project.description.toLowerCase().includes(search) ||
+        project.language?.toLowerCase().includes(search) ||
+        project.topics.some((t) => t.toLowerCase().includes(search));
+      
       return categoryMatch && searchMatch;
     });
   }, [selectedCategory, deferredSearch]);
 
-  // Category counts
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: allProjects.length };
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: allProjects.length };
     projectCategories.forEach((cat) => {
-      counts[cat.value] = allProjects.filter((p) => p.category === cat.value).length;
+      c[cat.value] = allProjects.filter((p) => p.category === cat.value).length;
     });
-    return counts;
+    return c;
   }, []);
 
   return (
-    <section
-      id="projects"
-      className="relative min-h-screen py-16 bg-[var(--color-background)]"
-      aria-label="Projects showcase"
-    >
-      {/* Background decoration */}
-      <div
-        className="absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, var(--color-primary) 1px, transparent 0)`,
-          backgroundSize: '32px 32px',
-        }}
-        aria-hidden="true"
-      />
+    <section id="projects" className="relative py-16 bg-zinc-950" aria-label="Projects showcase">
+      {/* Background */}
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: 'radial-gradient(circle at 1px 1px, #6366f1 1px, transparent 0)',
+        backgroundSize: '32px 32px'
+      }} />
 
       <Container size="xl">
-        {/* Section Header */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
+          viewport={{ once: true }}
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="gradient-text">Featured Projects</span>
           </h2>
-          <p className="text-base text-[var(--color-foreground-muted)] max-w-2xl mx-auto">
+          <p className="text-base text-zinc-400 max-w-2xl mx-auto">
             {allProjects.length} projects across AI/ML, web development, tools, and more.
           </p>
         </motion.div>
 
-        {/* Search and Filters */}
+        {/* Search */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
+          viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8"
         >
-          {/* Search */}
-          <SearchInput value={searchInput} onChange={handleSearchChange} />
-
-          {/* Result count */}
-          <div className={cn(
-            'text-sm text-[var(--color-foreground-muted)] transition-opacity',
-            isPending ? 'opacity-50' : 'opacity-100'
-          )}>
+          <SearchInput value={searchInput} onChange={setSearchInput} />
+          <div className={cn("text-sm text-zinc-500 transition-opacity", isPending ? "opacity-50" : "opacity-100")}>
             {filteredProjects.length} of {allProjects.length} projects
           </div>
         </motion.div>
 
-        {/* Category Filters */}
+        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
+          viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex flex-wrap justify-center gap-2 mb-10"
-          role="group"
-          aria-label="Filter projects by category"
+          className="mb-10"
         >
-          {projectCategories.map((category) => (
-            <FilterButton
-              key={category.value}
-              category={category}
-              isSelected={selectedCategory === category.value}
-              onClick={() => handleCategoryChange(category.value)}
-              count={categoryCounts[category.value] || 0}
-            />
-          ))}
+          <CategoryFilter selected={selectedCategory} onSelect={handleCategoryChange} counts={counts} />
         </motion.div>
 
-        {/* Projects Grid */}
+        {/* Grid */}
         <AnimatePresence mode="wait">
           {filteredProjects.length > 0 ? (
             <motion.div
@@ -433,29 +302,25 @@ export function ProjectsSection() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-              role="list"
             >
               {filteredProjects.map((project, index) => (
                 <ProjectCard key={project.id} project={project} index={index} />
               ))}
             </motion.div>
           ) : (
-            <EmptyState
-              searchQuery={deferredSearch}
-              onClearSearch={() => setSearchInput('')}
-            />
+            <EmptyState onClear={() => setSearchInput('')} />
           )}
         </AnimatePresence>
 
-        {/* GitHub CTA */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
+          viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-14 text-center"
         >
-          <p className="text-sm text-[var(--color-foreground-muted)] mb-4">
+          <p className="text-sm text-zinc-500 mb-4">
             Want to see all {githubProfile.publicRepos} repositories?
           </p>
           <Button

@@ -1,7 +1,6 @@
 // ============================================
 // OpenPortfolio - Header Component
-// Sticky navigation with mobile menu
-// WCAG 2.5 AAA Compliant
+// Fixed for Tailwind v4
 // ============================================
 
 import { useState, useEffect } from 'react';
@@ -9,20 +8,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
-import { navLinks, sections } from '@/data/projects';
+import { sections, githubProfile } from '@/data/projects';
 import { cn } from '@/lib/utils';
 
 // ============================================
-// Mobile Menu Component
+// Mobile Menu
 // ============================================
 
-interface MobileMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
-  // Close on escape key
+function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -48,42 +41,33 @@ function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            aria-hidden="true"
           />
 
-          {/* Menu Panel */}
+          {/* Menu */}
           <motion.div
-            className="fixed inset-y-0 right-0 w-72 bg-[var(--color-background-alt)] border-l border-[var(--color-border)] z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 w-72 bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            role="dialog"
-            aria-label="Navigation menu"
-            aria-modal="true"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-              <span className="text-lg font-semibold text-[var(--color-foreground)]">Menu</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                aria-label="Close menu"
-              >
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+              <span className="text-lg font-semibold text-white">Menu</span>
+              <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close menu">
                 <Icon name="x" size={24} />
               </Button>
             </div>
 
-            {/* Navigation Links */}
+            {/* Nav */}
             <nav className="flex-1 p-4">
-              <ul className="space-y-2" role="list">
+              <ul className="space-y-1">
                 {sections.map((section) => (
                   <li key={section.id}>
                     <a
                       href={section.href}
-                      className="flex items-center gap-3 p-3 rounded-lg text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-elevated)] transition-colors"
                       onClick={onClose}
+                      className="flex items-center gap-3 p-3 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
                     >
                       <Icon name={section.icon} size={20} />
                       <span>{section.name}</span>
@@ -93,35 +77,24 @@ function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               </ul>
             </nav>
 
-            {/* Social Links */}
-            <div className="p-4 border-t border-[var(--color-border)]">
+            {/* Social */}
+            <div className="p-4 border-t border-zinc-800">
               <div className="flex items-center justify-center gap-4">
                 <a
-                  href="https://github.com/aliasfoxkde"
+                  href={githubProfile.htmlUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-elevated)] transition-colors"
-                  aria-label="GitHub profile"
+                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                  aria-label="GitHub"
                 >
                   <Icon name="github" size={24} />
                 </a>
                 <a
-                  href="https://twitter.com/aliasfoxkde"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-elevated)] transition-colors"
-                  aria-label="Twitter profile"
+                  href="mailto:micheal.l.c.kinney@gmail.com"
+                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                  aria-label="Email"
                 >
-                  <Icon name="twitter" size={24} />
-                </a>
-                <a
-                  href="https://linkedin.com/in/micheal-kinney"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-elevated)] transition-colors"
-                  aria-label="LinkedIn profile"
-                >
-                  <Icon name="linkedin" size={24} />
+                  <Icon name="mail" size={24} />
                 </a>
               </div>
             </div>
@@ -133,15 +106,10 @@ function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 }
 
 // ============================================
-// Section Progress Indicator
+// Section Progress
 // ============================================
 
-interface SectionProgressProps {
-  progress: number;
-  currentSection: string;
-}
-
-function SectionProgress({ progress, currentSection }: SectionProgressProps) {
+function SectionProgress({ progress }: { progress: number }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -149,38 +117,29 @@ function SectionProgress({ progress, currentSection }: SectionProgressProps) {
       className="fixed top-1/2 -translate-y-1/2 right-4 z-30 hidden lg:flex flex-col items-center gap-4"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      role="navigation"
-      aria-label="Section navigation"
     >
       {/* Progress bar */}
-      <div className="relative h-48 w-1 bg-[var(--color-border)] rounded-full overflow-hidden">
+      <div className="relative h-48 w-1 bg-zinc-800 rounded-full overflow-hidden">
         <motion.div
-          className="absolute bottom-0 left-0 w-full bg-[var(--color-primary)] rounded-full"
+          className="absolute bottom-0 left-0 w-full bg-indigo-500 rounded-full"
           style={{ height: `${progress}%` }}
-          transition={{ type: 'spring', damping: 30, stiffness: 100 }}
         />
       </div>
 
-      {/* Section labels */}
+      {/* Labels on hover */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute right-6 flex flex-col gap-2"
-            initial={{ opacity: 0, x: 20 }}
+            className="absolute right-6 flex flex-col gap-2 bg-zinc-900/90 p-2 rounded-lg"
+            initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, x: 10 }}
           >
             {sections.map((section) => (
               <a
                 key={section.id}
                 href={section.href}
-                className={cn(
-                  'text-xs font-medium transition-colors whitespace-nowrap',
-                  currentSection === section.id
-                    ? 'text-[var(--color-primary)]'
-                    : 'text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)]'
-                )}
+                className="text-xs font-medium text-zinc-400 hover:text-white whitespace-nowrap"
               >
                 {section.name}
               </a>
@@ -189,19 +148,13 @@ function SectionProgress({ progress, currentSection }: SectionProgressProps) {
         )}
       </AnimatePresence>
 
-      {/* Section dots */}
+      {/* Dots */}
       <div className="flex flex-col gap-3">
         {sections.map((section) => (
           <a
             key={section.id}
             href={section.href}
-            className={cn(
-              'w-2 h-2 rounded-full transition-all duration-300',
-              currentSection === section.id
-                ? 'bg-[var(--color-primary)] scale-125'
-                : 'bg-[var(--color-border)] hover:bg-[var(--color-foreground-muted)]'
-            )}
-            aria-label={`Go to ${section.name} section`}
+            className="w-2 h-2 rounded-full bg-zinc-700 hover:bg-zinc-500 transition-colors"
             title={section.name}
           />
         ))}
@@ -211,16 +164,14 @@ function SectionProgress({ progress, currentSection }: SectionProgressProps) {
 }
 
 // ============================================
-// Main Header Component
+// Main Header
 // ============================================
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [currentSection, setCurrentSection] = useState('hero');
 
-  // Scroll detection
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -232,84 +183,46 @@ export function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Intersection Observer for section detection
-  useEffect(() => {
-    const sections = document.querySelectorAll('section[id]');
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
-            setCurrentSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [isMobileMenuOpen]);
-
   return (
     <>
+      {/* Header */}
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-30 transition-all duration-300',
+          "fixed top-0 left-0 right-0 z-30 transition-all duration-300",
           isScrolled
-            ? 'bg-[var(--color-background)]/80 backdrop-blur-lg border-b border-[var(--color-border)]'
-            : 'bg-transparent'
+            ? "bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-800"
+            : "bg-transparent"
         )}
-        role="banner"
       >
         <Container size="lg">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <a
-              href="#hero"
-              className="flex items-center gap-3 text-[var(--color-foreground)] font-semibold"
-              aria-label="Go to home section"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
-                <span className="text-lg sm:text-xl font-bold">M</span>
+            <a href="#hero" className="flex items-center gap-3 text-white font-semibold">
+              <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center">
+                <span className="text-lg font-bold">M</span>
               </div>
               <span className="hidden sm:inline">Micheal Kinney</span>
             </a>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1" role="navigation" aria-label="Main navigation">
-              {navLinks.map((link) => (
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {sections.map((section) => (
                 <a
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                    currentSection === link.href.slice(1)
-                      ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10'
-                      : 'text-[var(--color-foreground-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-background-alt)]'
-                  )}
-                  aria-current={currentSection === link.href.slice(1) ? 'page' : undefined}
+                  key={section.id}
+                  href={section.href}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
                 >
-                  {link.label}
+                  {section.name}
                 </a>
               ))}
             </nav>
 
-            {/* Desktop CTA */}
+            {/* CTA */}
             <div className="hidden md:flex items-center gap-3">
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => window.open('https://github.com/aliasfoxkde', '_blank', 'noopener')}
-                aria-label="View GitHub profile"
+                onClick={() => window.open(githubProfile.htmlUrl, '_blank', 'noopener')}
               >
                 <Icon name="github" size={16} />
                 <span>GitHub</span>
@@ -322,9 +235,7 @@ export function Header() {
               size="md"
               className="md:hidden"
               onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="mobile-menu"
+              aria-label="Open menu"
             >
               <Icon name="menu" size={24} />
             </Button>
@@ -333,16 +244,13 @@ export function Header() {
       </header>
 
       {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
-      {/* Section Progress Indicator */}
-      <SectionProgress progress={scrollProgress} currentSection={currentSection} />
+      {/* Section Progress */}
+      <SectionProgress progress={scrollProgress} />
 
-      {/* Spacer for fixed header */}
-      <div className="h-16 sm:h-20" aria-hidden="true" />
+      {/* Spacer */}
+      <div className="h-16 sm:h-20" />
     </>
   );
 }

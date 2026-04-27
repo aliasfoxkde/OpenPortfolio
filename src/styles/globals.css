@@ -1,12 +1,13 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* ============================================
-   OpenPortfolio - Global Styles
-   WCAG 2.5 AAA Compliant Design System
+   OpenPortfolio - Design System
+   Tailwind CSS v4 + Custom CSS Variables
+   WCAG 2.5 AAA Compliant
    ============================================ */
 
 /* CSS Custom Properties (Design Tokens) */
-:root {
+@theme {
   /* Colors - Dark Mode Primary */
   --color-background: #0a0a0f;
   --color-background-alt: #12121a;
@@ -35,88 +36,41 @@
   /* Border Colors */
   --color-border: #27272a;
   --color-border-hover: #3f3f46;
-  --color-border-focus: #6366f1;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
-  /* Spacing */
-  --space-0: 0;
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-  --space-24: 6rem;
-
   /* Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
   --radius-full: 9999px;
-
-  /* Transitions */
-  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 0.15s;
-  --duration-base: 0.3s;
-  --duration-slow: 0.5s;
-
-  /* Container */
-  --container-max: 1280px;
-  --container-padding: 1rem;
 }
 
 /* ============================================
    Base Styles
    ============================================ */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 body {
   font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.5;
   color: var(--color-foreground);
   background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  line-height: 1.5;
 }
 
 /* Focus styles */
-:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-:focus:not(:focus-visible) {
-  outline: none;
-}
-
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
@@ -150,7 +104,6 @@ body {
 /* Links */
 a {
   color: var(--color-primary);
-  transition: color var(--duration-fast) var(--ease-out);
   text-decoration: none;
 }
 
@@ -168,89 +121,15 @@ svg {
   display: block;
 }
 
-/* Forms */
-input,
-button,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
-}
-
+/* Buttons */
 button {
   cursor: pointer;
-  background: transparent;
-  border: none;
 }
-
-/* Lists */
-ul,
-ol {
-  list-style: none;
-}
-
-/* Tables */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-/* Headings */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-h1 { font-size: 3rem; }
-h2 { font-size: 2.25rem; }
-h3 { font-size: 1.875rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1.125rem; }
 
 /* ============================================
-   Utility Classes
+   Gradient Text Utility
    ============================================ */
 
-/* Screen reader only */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-/* Container */
-.container {
-  width: 100%;
-  max-width: var(--container-max);
-  padding-left: var(--container-padding);
-  padding-right: var(--container-padding);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Glass effect */
-.glass {
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-strong {
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
   -webkit-text-fill-color: transparent;
@@ -259,151 +138,52 @@ h6 { font-size: 1.125rem; }
 }
 
 /* ============================================
-   3D Card Flip Animation
+   3D Card Flip Animation (Critical)
    ============================================ */
 
-.rotate-y-180 {
-  transform: rotateY(180deg);
+.flip-card {
+  perspective: 1000px;
 }
 
-.preserve-3d {
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
 }
 
-.backface-hidden {
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
 /* ============================================
-   Animations
+   Glass Effect
    ============================================ */
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-    transform: translateY(-25%);
-  }
-  50% {
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-    transform: none;
-  }
-}
-
-@keyframes pulse {
-  50% { opacity: 0.5; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-/* Animation utilities */
-.animate-fade-in { animation: fadeIn var(--duration-base) var(--ease-out); }
-.animate-fade-in-up { animation: fadeInUp var(--duration-slow) var(--ease-out); }
-.animate-fade-in-down { animation: fadeInDown var(--duration-slow) var(--ease-out); }
-.animate-slide-in-right { animation: slideInRight var(--duration-slow) var(--ease-out); }
-.animate-slide-in-left { animation: slideInLeft var(--duration-slow) var(--ease-out); }
-.animate-scale-in { animation: scaleIn var(--duration-base) var(--ease-spring); }
-.animate-bounce { animation: bounce 2s var(--ease-in-out) infinite; }
-.animate-pulse { animation: pulse 2s var(--ease-in-out) infinite; }
-.animate-spin { animation: 1s linear infinite spin; }
-.animate-float { animation: float 3s var(--ease-in-out) infinite; }
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--color-background-alt) 0%,
-    var(--color-background-elevated) 50%,
-    var(--color-background-alt) 100%
-  );
-  background-size: 200% 100%;
-  animation: 1.5s linear infinite shimmer;
-}
-
-.animate-blink {
-  animation: blink 1s step-end infinite;
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
    Accessibility
    ============================================ */
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -415,20 +195,6 @@ h6 { font-size: 1.125rem; }
   }
 }
 
-/* Print styles */
-@media print {
-  body {
-    color: #000;
-    background: #fff;
-  }
-
-  .no-print,
-  .no-print * {
-    display: none !important;
-  }
-}
-
-/* High contrast mode */
 @media (forced-colors: active) {
   :root {
     --color-primary: Highlight;
@@ -436,51 +202,4 @@ h6 { font-size: 1.125rem; }
     --color-background: Canvas;
     --color-foreground: CanvasText;
   }
-}
-
-/* ============================================
-   Typography Scale
-   ============================================ */
-
-.text-xs { font-size: 0.75rem; line-height: 1rem; }
-.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-.text-base { font-size: 1rem; line-height: 1.5rem; }
-.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-.text-2xl { font-size: 1.5rem; line-height: 2rem; }
-.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
-.text-5xl { font-size: 3rem; line-height: 1; }
-.text-6xl { font-size: 3.75rem; line-height: 1; }
-.text-7xl { font-size: 4.5rem; line-height: 1; }
-
-/* Font weights */
-.font-normal { font-weight: 400; }
-.font-medium { font-weight: 500; }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
-
-/* ============================================
-   Line Clamp Utilities
-   ============================================ */
-
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
