@@ -1,0 +1,11 @@
+name = "openportfolio"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+account_id = "ee03e28b74afa2be7d9792f248770393"
+
+[vars]
+ENVIRONMENT = "production"
+
+# GitHub integration for automatic deployments
+main = "main"

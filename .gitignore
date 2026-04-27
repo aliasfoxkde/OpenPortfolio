@@ -1,0 +1,38 @@
+node_modules
+dist
+.vite
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage
+.turbo
+.vercel
+.wrangler
+.cache
+.venv
+__pycache__
+*.pyc
+.idea
+.vscode
+*.swp
+*.swo
+.nyc_output
+playwright-report
+test-results
+*.tgz
+.cache
+.tmp
+# Build outputs
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.d.ts.map
+
+# Coverage
+coverage/
+lcov.info
+
+# Temp files
+*.tmp
+.tmp/
