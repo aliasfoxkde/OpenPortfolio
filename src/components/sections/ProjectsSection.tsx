@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Projects Section
-// Dynamic loading with async/await
+// With sort options and refresh
 // ============================================
 
 import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
@@ -10,8 +10,11 @@ import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
 import { Badge, LanguageBadge, CategoryBadge, StatusBadge } from '@/components/ui/Badge';
 import { loadProjects, projectCategories, githubProfile } from '@/data/projects';
+import { invalidateCache } from '@/lib/github';
 import type { Project } from '@/lib/types';
 import { cn, formatNumber } from '@/lib/utils';
+
+type SortOption = 'recent' | 'stars' | 'name' | 'forks';
 
 // ============================================
 // Loading Skeleton
@@ -19,27 +22,23 @@ import { cn, formatNumber } from '@/lib/utils';
 
 function ProjectSkeleton() {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 h-full animate-pulse">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 h-full animate-pulse">
       <div className="flex items-center gap-2 mb-3">
-        <div className="h-5 w-20 bg-zinc-800 rounded-full" />
-        <div className="h-5 w-5 bg-zinc-800 rounded-full" />
+        <div className="h-5 w-20 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+        <div className="h-5 w-5 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
       </div>
-      <div className="h-6 w-3/4 bg-zinc-800 rounded mb-2" />
+      <div className="h-6 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded mb-2" />
       <div className="space-y-2 mb-3">
-        <div className="h-4 w-full bg-zinc-800 rounded" />
-        <div className="h-4 w-5/6 bg-zinc-800 rounded" />
+        <div className="h-4 w-full bg-zinc-200 dark:bg-zinc-800 rounded" />
+        <div className="h-4 w-5/6 bg-zinc-200 dark:bg-zinc-800 rounded" />
       </div>
-      <div className="flex gap-2 mb-4">
-        <div className="h-5 w-16 bg-zinc-800 rounded-full" />
-        <div className="h-5 w-16 bg-zinc-800 rounded-full" />
-      </div>
-      <div className="h-10 w-full bg-zinc-800 rounded-lg" />
+      <div className="h-10 w-full bg-zinc-200 dark:bg-zinc-800 rounded-lg" />
     </div>
   );
 }
 
 // ============================================
-// Project Card Component
+// Project Card
 // ============================================
 
 function ProjectCard({ project, index }: { project: Project; index: number }) {
@@ -52,11 +51,11 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       transition={{ delay: index * 0.03, duration: 0.3 }}
       className="group relative"
     >
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 h-full flex flex-col transition-all duration-300 hover:border-indigo-500/50 hover:bg-zinc-900">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 p-5 h-full flex flex-col transition-all duration-300 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 hover:shadow-lg">
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <CategoryBadge
                 category={projectCategories.find((c) => c.value === project.category)?.label || project.category}
                 color={categoryColor}
@@ -67,14 +66,14 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
                 <Badge variant="secondary" size="sm">Contributor</Badge>
               )}
             </div>
-            <h3 className="text-lg font-semibold text-white truncate">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white truncate">
               {project.name}
             </h3>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-sm text-zinc-400 flex-1 line-clamp-3 mb-3">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 flex-1 line-clamp-3 mb-3">
           {project.description || 'No description available'}
         </p>
 
@@ -91,8 +90,8 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-4 pt-3 border-t border-zinc-800">
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <div className="flex items-center justify-between gap-4 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             {project.language && <LanguageBadge language={project.language} />}
             {project.stars > 0 && (
               <span className="flex items-center gap-1">
@@ -144,23 +143,75 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="relative w-full max-w-md">
-      <Icon name="code" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+      <Icon name="code" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Search projects..."
-        className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-zinc-800 bg-zinc-900/50 text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+        className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
         aria-label="Search projects"
       />
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-500 hover:text-white hover:bg-zinc-800"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
           aria-label="Clear search"
         >
           <Icon name="x" size={14} />
         </button>
+      )}
+    </div>
+  );
+}
+
+// ============================================
+// Sort Dropdown
+// ============================================
+
+function SortDropdown({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) {
+  const [open, setOpen] = useState(false);
+
+  const options: { value: SortOption; label: string; icon: string }[] = [
+    { value: 'recent', label: 'Recently Updated', icon: 'clock' },
+    { value: 'stars', label: 'Most Stars', icon: 'star' },
+    { value: 'forks', label: 'Most Forks', icon: 'fork' },
+    { value: 'name', label: 'Name (A-Z)', icon: 'sort-alphabet' },
+  ];
+
+  const current = options.find(o => o.value === value);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-sm text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 transition-colors"
+      >
+        <Icon name={current?.icon || 'sort'} size={16} />
+        <span className="hidden sm:inline">{current?.label}</span>
+        <Icon name="chevron-down" size={14} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg overflow-hidden">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
+                  value === opt.value
+                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                )}
+              >
+                <Icon name={opt.icon} size={14} />
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -189,7 +240,7 @@ function CategoryFilter({
             "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border",
             selected === cat.value
               ? "bg-indigo-500 text-white border-indigo-500"
-              : "bg-zinc-900/50 text-zinc-400 border-zinc-800 hover:text-white hover:border-zinc-700"
+              : "bg-white dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700"
           )}
           aria-pressed={selected === cat.value}
         >
@@ -200,7 +251,7 @@ function CategoryFilter({
           <span>{cat.label}</span>
           <span className={cn(
             "px-1.5 py-0.5 rounded-full text-xs",
-            selected === cat.value ? "bg-white/20" : "bg-zinc-800"
+            selected === cat.value ? "bg-white/20" : "bg-zinc-100 dark:bg-zinc-800"
           )}>
             {counts[cat.value] || 0}
           </span>
@@ -217,9 +268,9 @@ function CategoryFilter({
 function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <Icon name="folder" size={40} className="text-zinc-600 mb-4" />
-      <h3 className="text-lg font-semibold text-white mb-2">No projects found</h3>
-      <p className="text-sm text-zinc-500 mb-4">Try adjusting your search or filter</p>
+      <Icon name="folder" size={40} className="text-zinc-300 dark:text-zinc-600 mb-4" />
+      <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">No projects found</h3>
+      <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">Try adjusting your search or filter</p>
       <Button variant="outline" size="sm" onClick={onClear}>Clear Search</Button>
     </div>
   );
@@ -235,47 +286,77 @@ export function ProjectsSection() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchInput, setSearchInput] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const deferredSearch = useDeferredValue(searchInput);
   const [isPending, startTransition] = useTransition();
 
-  // Load projects on mount
-  useEffect(() => {
-    async function load() {
-      try {
-        setIsLoading(true);
-        const loadedProjects = await loadProjects();
-        setProjects(loadedProjects);
-        setError(null);
-      } catch (err) {
-        setError('Failed to load projects');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
+  // Load projects
+  const load = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const loadedProjects = await loadProjects();
+      setProjects(loadedProjects);
+      setLastUpdated(new Date());
+      setError(null);
+    } catch (err) {
+      setError('Failed to load projects');
+    } finally {
+      setIsLoading(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Refresh handler
+  const handleRefresh = () => {
+    invalidateCache();
+    load();
+  };
 
   const handleCategoryChange = useCallback((cat: string) => {
     startTransition(() => setSelectedCategory(cat));
   }, []);
 
+  // Sort and filter
   const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const categoryMatch = selectedCategory === 'all' || project.category === selectedCategory;
-      
-      if (!deferredSearch) return categoryMatch;
-      
+    let result = [...projects];
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      result = result.filter((p) => p.category === selectedCategory);
+    }
+
+    // Filter by search
+    if (deferredSearch) {
       const search = deferredSearch.toLowerCase();
-      const searchMatch =
-        project.name.toLowerCase().includes(search) ||
-        project.description.toLowerCase().includes(search) ||
-        project.language?.toLowerCase().includes(search) ||
-        project.topics?.some((t) => t.toLowerCase().includes(search));
-      
-      return categoryMatch && searchMatch;
-    });
-  }, [projects, selectedCategory, deferredSearch]);
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search) ||
+          p.description.toLowerCase().includes(search) ||
+          p.language?.toLowerCase().includes(search) ||
+          p.topics?.some((t) => t.toLowerCase().includes(search))
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'stars':
+        result.sort((a, b) => b.stars - a.stars);
+        break;
+      case 'forks':
+        result.sort((a, b) => b.forks - a.forks);
+        break;
+      case 'name':
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'recent':
+      default:
+        result.sort((a, b) => new Date(b.pushedAt).getTime() - new Date(a.pushedAt).getTime());
+    }
+
+    return result;
+  }, [projects, selectedCategory, deferredSearch, sortBy]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: projects.length };
@@ -286,9 +367,9 @@ export function ProjectsSection() {
   }, [projects]);
 
   return (
-    <section id="projects" className="relative py-16 bg-zinc-950" aria-label="Projects showcase">
+    <section id="projects" className="relative py-16 bg-zinc-50 dark:bg-zinc-950" aria-label="Projects showcase">
       {/* Background */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
+      <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.02]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #6366f1 1px, transparent 0)',
         backgroundSize: '32px 32px'
       }} />
@@ -305,12 +386,17 @@ export function ProjectsSection() {
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="gradient-text">Featured Projects</span>
           </h2>
-          <p className="text-base text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
             {isLoading ? 'Loading projects...' : `${projects.length} projects across AI/ML, web development, tools, and more.`}
           </p>
+          {lastUpdated && !isLoading && (
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-2">
+              Updated {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
         </motion.div>
 
-        {/* Search */}
+        {/* Toolbar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -319,8 +405,16 @@ export function ProjectsSection() {
           className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8"
         >
           <SearchInput value={searchInput} onChange={setSearchInput} />
-          <div className={cn("text-sm text-zinc-500 transition-opacity", isPending ? "opacity-50" : "opacity-100")}>
-            {filteredProjects.length} {isLoading ? 'loading...' : `of ${projects.length} projects`}
+          <div className="flex items-center gap-3">
+            <SortDropdown value={sortBy} onChange={setSortBy} />
+            <button
+              onClick={handleRefresh}
+              className="p-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-700 transition-colors"
+              aria-label="Refresh projects"
+              title="Refresh from GitHub"
+            >
+              <Icon name="refresh" size={18} className={isLoading ? 'animate-spin' : ''} />
+            </button>
           </div>
         </motion.div>
 
@@ -335,12 +429,17 @@ export function ProjectsSection() {
           <CategoryFilter selected={selectedCategory} onSelect={handleCategoryChange} counts={counts} />
         </motion.div>
 
+        {/* Result count */}
+        <div className={cn("text-sm text-zinc-500 dark:text-zinc-400 mb-4 transition-opacity", isPending ? "opacity-50" : "opacity-100")}>
+          {filteredProjects.length} {isLoading ? 'loading...' : `of ${projects.length} projects`}
+        </div>
+
         {/* Error State */}
         {error && (
-          <div className="text-center py-8 text-red-400">
+          <div className="text-center py-8 text-red-500 dark:text-red-400">
             <Icon name="alert-circle" size={24} className="mx-auto mb-2" />
             <p>{error}</p>
-            <Button variant="outline" size="sm" className="mt-4" onClick={() => window.location.reload()}>
+            <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>
               Retry
             </Button>
           </div>
@@ -358,7 +457,7 @@ export function ProjectsSection() {
           <AnimatePresence mode="wait">
             {filteredProjects.length > 0 ? (
               <motion.div
-                key={`${selectedCategory}-${deferredSearch}`}
+                key={`${selectedCategory}-${deferredSearch}-${sortBy}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -384,7 +483,7 @@ export function ProjectsSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-14 text-center"
           >
-            <p className="text-sm text-zinc-500 mb-4">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
               Want to see all {githubProfile.publicRepos} repositories?
             </p>
             <Button

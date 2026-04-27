@@ -1,0 +1,16 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://portfolio.cyopsys.com/sitemap.xml
+
+# Crawl-delay for politeness
+Crawl-delay: 1
+
+# Block AI training bots (optional)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /

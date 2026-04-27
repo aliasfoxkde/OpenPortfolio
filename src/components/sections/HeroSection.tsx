@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Hero Section
-// Fixed for Tailwind v4
+// Fixed avatar URL and Tailwind v4
 // ============================================
 
 import { useEffect, useRef, useState } from 'react';
@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
-import { githubProfile } from '@/data/projects';
+import { getGitHubProfile } from '@/lib/github';
 import { formatNumber } from '@/lib/utils';
 
 // ============================================
@@ -118,18 +118,39 @@ function GradientBackground() {
 
 export function HeroSection() {
   const [isReducedMotion, setIsReducedMotion] = useState(false);
-  const [typedText, setTypedText] = useState('');
+  const [profile, setProfile] = useState<{
+    name: string;
+    login: string;
+    bio: string;
+    publicRepos: number;
+    followers: number;
+    following: number;
+    avatarUrl: string;
+    htmlUrl: string;
+  } | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setIsReducedMotion(mq.matches);
-    setTypedText('Full-Stack developer with passion for CS, ML/AI, process automation, and technical writing.');
+
+    // Fetch profile from GitHub API
+    getGitHubProfile().then((p) => {
+      if (p) setProfile(p as typeof profile);
+    });
   }, []);
+
+  const avatarUrl = profile?.avatarUrl || 'https://avatars.githubusercontent.com/u/14325925?v=4';
+  const name = profile?.name || 'Micheal Kinney';
+  const login = profile?.login || 'aliasfoxkde';
+  const bio = profile?.bio || 'Full-Stack Developer specializing in AI/ML, React, TypeScript, Cloudflare, and process automation.';
+  const publicRepos = profile?.publicRepos || 28;
+  const followers = profile?.followers || 22;
+  const following = profile?.following || 58;
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-zinc-950">
+      <div className="absolute inset-0 bg-white dark:bg-zinc-950">
         {isReducedMotion ? <GradientBackground /> : <ParticleCanvas />}
       </div>
 
@@ -148,13 +169,13 @@ export function HeroSection() {
             transition={{ duration: 0.5 }}
           >
             <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-indigo-500/30 blur-xl animate-pulse" />
+              <div className="absolute -inset-4 rounded-full bg-indigo-500/30 dark:bg-indigo-500/30 blur-xl animate-pulse" />
               <img
-                src={githubProfile.avatarUrl}
-                alt={`${githubProfile.name}'s avatar`}
+                src={avatarUrl}
+                alt={`${name}'s avatar`}
                 className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-lg shadow-indigo-500/30 object-cover"
               />
-              <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-zinc-950 animate-pulse" />
+              <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-zinc-950 animate-pulse" />
             </div>
           </motion.div>
 
@@ -163,29 +184,29 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-900 dark:text-white"
           >
-            {githubProfile.name || githubProfile.login}
+            {name}
           </motion.h1>
 
           {/* Username */}
           <motion.p
-            className="text-lg sm:text-xl text-zinc-400"
+            className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <span className="text-indigo-500">@</span>{githubProfile.login}
+            <span className="text-indigo-500">@</span>{login}
           </motion.p>
 
           {/* Bio */}
           <motion.p
-            className="max-w-2xl text-base sm:text-lg text-zinc-400 leading-relaxed"
+            className="max-w-2xl text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            {typedText}
+            {bio}
           </motion.p>
 
           {/* Stats */}
@@ -196,15 +217,15 @@ export function HeroSection() {
             transition={{ delay: 1 }}
           >
             {[
-              { label: 'Repos', value: githubProfile.publicRepos },
-              { label: 'Followers', value: githubProfile.followers },
-              { label: 'Following', value: githubProfile.following },
+              { label: 'Repos', value: publicRepos },
+              { label: 'Followers', value: followers },
+              { label: 'Following', value: following },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-indigo-500">
                   {formatNumber(stat.value)}
                 </div>
-                <div className="text-sm text-zinc-500">{stat.label}</div>
+                <div className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -220,7 +241,7 @@ export function HeroSection() {
               variant="primary"
               size="lg"
               leftIcon={<Icon name="github" size={20} />}
-              onClick={() => window.open(githubProfile.htmlUrl, '_blank', 'noopener')}
+              onClick={() => window.open(`https://github.com/${login}`, '_blank', 'noopener')}
             >
               View on GitHub
             </Button>
@@ -245,7 +266,7 @@ export function HeroSection() {
       </Container>
 
       {/* Gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-zinc-950 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-zinc-950 to-transparent" />
     </section>
   );
 }

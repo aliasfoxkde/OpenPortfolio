@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Header Component
-// Fixed for Tailwind v4
+// Fixed for Tailwind v4 with Theme Toggle
 // ============================================
 
 import { useState, useEffect } from 'react';
@@ -8,8 +8,80 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
+import { useTheme } from '@/lib/theme';
 import { sections, githubProfile } from '@/data/projects';
-import { cn } from '@/lib/utils';
+
+// ============================================
+// Icons
+// ============================================
+
+function SunIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  );
+}
+
+function ComputerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="14" height="8" x="5" y="2" rx="2" ry="2"/>
+      <rect width="20" height="8" x="2" y="14" rx="2" ry="2"/>
+      <line x1="6" x2="6.01" y1="6" y2="6"/>
+      <line x1="6" x2="6.01" y1="18" y2="18"/>
+    </svg>
+  );
+}
+
+// ============================================
+// Theme Toggle
+// ============================================
+
+function ThemeToggle() {
+  const { theme, resolvedTheme, setTheme } = useTheme();
+
+  const cycleTheme = () => {
+    if (theme === 'system') {
+      setTheme('light');
+    } else if (theme === 'light') {
+      setTheme('dark');
+    } else {
+      setTheme('system');
+    }
+  };
+
+  const ThemeIcon = () => {
+    if (theme === 'system') return <ComputerIcon />;
+    return resolvedTheme === 'dark' ? <MoonIcon /> : <SunIcon />;
+  };
+
+  const getLabel = () => {
+    if (theme === 'system') return 'System';
+    return theme === 'dark' ? 'Dark' : 'Light';
+  };
+
+  return (
+    <button
+      onClick={cycleTheme}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors"
+      aria-label={`Current theme: ${getLabel()}. Click to change.`}
+      title={`Theme: ${getLabel()}`}
+    >
+      <ThemeIcon />
+      <span className="hidden sm:inline">{getLabel()}</span>
+    </button>
+  );
+}
 
 // ============================================
 // Mobile Menu
@@ -34,7 +106,6 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             initial={{ opacity: 0 }}
@@ -42,24 +113,19 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
-
-          {/* Menu */}
           <motion.div
-            className="fixed inset-y-0 right-0 w-72 bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 w-72 bg-zinc-950 dark:bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800">
               <span className="text-lg font-semibold text-white">Menu</span>
               <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close menu">
                 <Icon name="x" size={24} />
               </Button>
             </div>
-
-            {/* Nav */}
             <nav className="flex-1 p-4">
               <ul className="space-y-1">
                 {sections.map((section) => (
@@ -76,27 +142,8 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                 ))}
               </ul>
             </nav>
-
-            {/* Social */}
             <div className="p-4 border-t border-zinc-800">
-              <div className="flex items-center justify-center gap-4">
-                <a
-                  href={githubProfile.htmlUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
-                  aria-label="GitHub"
-                >
-                  <Icon name="github" size={24} />
-                </a>
-                <a
-                  href="mailto:micheal.l.c.kinney@gmail.com"
-                  className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
-                  aria-label="Email"
-                >
-                  <Icon name="mail" size={24} />
-                </a>
-              </div>
+              <ThemeToggle />
             </div>
           </motion.div>
         </>
@@ -118,15 +165,12 @@ function SectionProgress({ progress }: { progress: number }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Progress bar */}
       <div className="relative h-48 w-1 bg-zinc-800 rounded-full overflow-hidden">
         <motion.div
           className="absolute bottom-0 left-0 w-full bg-indigo-500 rounded-full"
           style={{ height: `${progress}%` }}
         />
       </div>
-
-      {/* Labels on hover */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -147,8 +191,6 @@ function SectionProgress({ progress }: { progress: number }) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Dots */}
       <div className="flex flex-col gap-3">
         {sections.map((section) => (
           <a
@@ -185,14 +227,12 @@ export function Header() {
 
   return (
     <>
-      {/* Header */}
       <header
-        className={cn(
-          "fixed top-0 left-0 right-0 z-30 transition-all duration-300",
+        className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${
           isScrolled
-            ? "bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-800"
-            : "bg-transparent"
-        )}
+            ? 'bg-zinc-950/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-800'
+            : 'bg-transparent'
+        }`}
       >
         <Container size="lg">
           <div className="flex items-center justify-between h-16 sm:h-20">
@@ -217,39 +257,39 @@ export function Header() {
               ))}
             </nav>
 
-            {/* CTA */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* Right Side */}
+            <div className="flex items-center gap-2">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
+              {/* CTA */}
               <Button
                 variant="primary"
                 size="sm"
+                className="hidden sm:flex"
                 onClick={() => window.open(githubProfile.htmlUrl, '_blank', 'noopener')}
               >
                 <Icon name="github" size={16} />
                 <span>GitHub</span>
               </Button>
-            </div>
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="md"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Icon name="menu" size={24} />
-            </Button>
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="md"
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <Icon name="menu" size={24} />
+              </Button>
+            </div>
           </div>
         </Container>
       </header>
 
-      {/* Mobile Menu */}
       <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-
-      {/* Section Progress */}
       <SectionProgress progress={scrollProgress} />
-
-      {/* Spacer */}
       <div className="h-16 sm:h-20" />
     </>
   );

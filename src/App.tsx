@@ -10,6 +10,7 @@ import { AboutSection } from '@/components/sections/AboutSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { AffiliatesSection } from '@/components/sections/AffiliatesSection';
 import { ContactSection } from '@/components/sections/ContactSection';
+import { ThemeProvider } from '@/lib/theme';
 import '@/styles/globals.css';
 
 // ============================================
@@ -20,8 +21,8 @@ function LoadingSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-16 h-16 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-        <p className="text-[var(--color-foreground-muted)]">Loading...</p>
+        <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-zinc-500 dark:text-zinc-400">Loading...</p>
       </div>
     </div>
   );
@@ -31,13 +32,13 @@ function LoadingSkeleton() {
 // Main App Component
 // ============================================
 
-function App() {
+function AppContent() {
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
+    <div className="min-h-screen bg-white dark:bg-zinc-950">
       {/* Skip to main content link for accessibility */}
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--color-primary)] focus:text-[var(--color-primary-foreground)] focus:rounded-lg"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-500 focus:text-white focus:rounded-lg"
       >
         Skip to main content
       </a>
@@ -67,6 +68,14 @@ function App() {
       {/* Footer */}
       <Footer />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

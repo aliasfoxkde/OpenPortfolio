@@ -1,6 +1,7 @@
 // ============================================
 // OpenPortfolio - GitHub API Integration
 // Dynamically loads repos from GitHub API
+// Uses authenticated requests to avoid rate limits
 // ============================================
 
 import type { Project, ProjectCategory } from '@/lib/types';
@@ -8,9 +9,13 @@ import type { Project, ProjectCategory } from '@/lib/types';
 const GITHUB_API = 'https://api.github.com';
 const USERNAME = 'aliasfoxkde';
 
+// GitHub Personal Access Token for authenticated requests
+// Increases rate limit from 60/hour to 5000/hour
+// Set via VITE_GITHUB_TOKEN environment variable
+const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN || '';
+
 /**
- * Manually specified contributed projects (not owned by aliasfoxkde)
- * These will be merged with fetched repos
+ * Manually specified contributed projects
  */
 const CONTRIBUTED_PROJECTS: Partial<Project>[] = [
   {
@@ -64,7 +69,52 @@ const CONTRIBUTED_PROJECTS: Partial<Project>[] = [
 ];
 
 /**
- * Map GitHub language to project category
+ * GitHub repository topics that indicate categories
+ */
+const TOPIC_CATEGORIES: Record<string, ProjectCategory> = {
+  'ai': 'ai-ml',
+  'ml': 'ai-ml',
+  'machine-learning': 'ai-ml',
+  'llm': 'ai-ml',
+  'webapp': 'web-apps',
+  'website': 'web-apps',
+  'cms': 'web-apps',
+  'productivity': 'web-apps',
+  'game': 'games',
+  'tool': 'tools',
+  'cli': 'tools',
+  'automation': 'tools',
+  'vscode': 'extensions',
+  'extension': 'extensions',
+  'devops': 'infrastructure',
+  'infrastructure': 'infrastructure',
+  'learning': 'learning',
+  'template': 'templates',
+};
+
+/**
+ * Featured repo names
+ */
+const FEATURED_REPOS = new Set([
+  'openzenith', 'teckspecs', 'patternforge', 'openpress', 'webos',
+  'edgemind', 'buy_a_buddy', 'stationaware', 'prisai', 'openportfolio',
+  'opencad', 'bolt.diy', 'agentic-swarm-bench'
+]);
+
+/**
+ * Map topics to category
+ */
+function getCategoryFromTopics(topics: string[]): ProjectCategory {
+  for (const topic of topics) {
+    if (TOPIC_CATEGORIES[topic]) {
+      return TOPIC_CATEGORIES[topic];
+    }
+  }
+  return 'tools';
+}
+
+/**
+ * Map GitHub language to category fallback
  */
 function getCategoryFromLanguage(language: string | null): ProjectCategory {
   const langMap: Record<string, ProjectCategory> = {
@@ -73,12 +123,6 @@ function getCategoryFromLanguage(language: string | null): ProjectCategory {
     Python: 'tools',
     HTML: 'web-apps',
     CSS: 'web-apps',
-    Rust: 'tools',
-    Go: 'tools',
-    Java: 'tools',
-    'C++': 'tools',
-    Ruby: 'web-apps',
-    PHP: 'web-apps',
   };
   return langMap[language || ''] || 'tools';
 }
@@ -93,30 +137,46 @@ function getStatus(repo: { archived: boolean; homepage?: string }): 'live' | 'ar
 }
 
 /**
- * Determine if repo should be featured
+ * Build tech stack from language and topics
  */
-function isFeatured(name: string, stars: number, hasHomepage: boolean): boolean {
-  const featuredNames = ['openzenith', 'teckspecs', 'patternforge', 'openpress', 'webos', 'edgemind', 'buy_a_buddy', 'stationaware', 'prisai', 'openportfolio'];
-  const lowercaseName = name.toLowerCase().replace(/-/g, '_');
-  return featuredNames.includes(lowercaseName) || stars > 10 || hasHomepage;
+function buildTechStack(language: string | null, topics: string[]): string[] {
+  const stack: string[] = [];
+  if (language) stack.push(language);
+  // Add common frameworks from topics
+  const frameworks = topics.filter(t => ['react', 'vue', 'angular', 'nextjs', 'vite', 'tailwind', 'fastapi', 'flask', 'django', 'express'].includes(t.toLowerCase()));
+  stack.push(...frameworks);
+  return [...new Set(stack)].slice(0, 6);
+}
+
+/**
+ * Check if repo should be featured
+ */
+function isFeatured(name: string, stars: number, hasHomepage: boolean, topics: string[]): boolean {
+  const lower = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (FEATURED_REPOS.has(lower)) return true;
+  if (stars > 10) return true;
+  if (hasHomepage) return true;
+  if (topics.some(t => ['ai', 'ml', 'llm', 'webapp'].includes(t.toLowerCase()))) return true;
+  return false;
+}
+
+/**
+ * Create headers with auth token
+ */
+function getHeaders(): HeadersInit {
+  return {
+    Accept: 'application/vnd.github.v3+json',
+    ...(GITHUB_TOKEN ? { Authorization: `Bearer ${GITHUB_TOKEN}` } : {}),
+  };
 }
 
 /**
  * Fetch GitHub profile
  */
-export async function fetchGitHubProfile(): Promise<{
-  login: string;
-  name: string | null;
-  bio: string | null;
-  publicRepos: number;
-  followers: number;
-  following: number;
-  avatarUrl: string;
-  htmlUrl: string;
-} | null> {
+export async function fetchGitHubProfile() {
   try {
     const response = await fetch(`${GITHUB_API}/users/${USERNAME}`, {
-      headers: { Accept: 'application/vnd.github.v3+json' },
+      headers: getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to fetch profile');
     const data = await response.json();
@@ -137,52 +197,57 @@ export async function fetchGitHubProfile(): Promise<{
 }
 
 /**
- * Fetch all non-forked repos for a user
+ * Fetch all non-forked repos
  */
 export async function fetchGitHubRepos(): Promise<Project[]> {
   try {
     const response = await fetch(
       `${GITHUB_API}/users/${USERNAME}/repos?per_page=100&sort=updated&type=owner`,
-      { headers: { Accept: 'application/vnd.github.v3+json' } }
+      { headers: getHeaders() }
     );
     if (!response.ok) throw new Error('Failed to fetch repos');
     const repos = await response.json();
 
-    // Filter out forks, keep only original repos
-    const originalRepos: Project[] = repos
-      .filter((repo: { fork: boolean }) => !repo.fork)
-      .map((repo: Record<string, unknown>) => ({
-        id: (repo.name as string).toLowerCase().replace(/[^a-z0-9]/g, '-'),
-        name: repo.name as string,
-        fullName: `${USERNAME}/${repo.name}`,
-        description: (repo.description as string) || '',
-        homepage: (repo.homepage as string) || '',
-        htmlUrl: repo.html_url as string,
-        language: repo.language as string | null,
-        stars: repo.stargazers_count as number,
-        forks: repo.forks_count as number,
-        watchers: repo.watchers_count as number,
-        topics: (repo.topics as string[]) || [],
-        category: getCategoryFromLanguage(repo.language as string | null),
-        isFeatured: isFeatured(repo.name as string, repo.stargazers_count as number, Boolean(repo.homepage)),
-        isArchived: repo.archived as boolean,
-        createdAt: repo.created_at as string,
-        updatedAt: repo.updated_at as string,
-        pushedAt: repo.pushed_at as string,
-        deploymentUrl: (repo.homepage as string) || undefined,
-        links: repo.homepage ? { live: repo.homepage as string } : undefined,
-        status: getStatus({ archived: repo.archived as boolean, homepage: repo.homepage as string | undefined }),
-        techStack: [(repo.language as string) || 'Unknown'].filter(Boolean),
-      }));
-
-    // Merge with contributed projects
+    // Get contributed project IDs to avoid duplicates
     const contributedIds = CONTRIBUTED_PROJECTS.map((p) => p.id);
-    const allProjects = [
-      ...CONTRIBUTED_PROJECTS,
-      ...originalRepos.filter((r) => !contributedIds.includes(r.id)),
-    ] as Project[];
 
-    return allProjects;
+    // Filter out forks, merge with contributed
+    const originalRepos: Project[] = repos
+      .filter((repo: Record<string, unknown>) => !(repo.fork as boolean))
+      .map((repo: Record<string, unknown>) => {
+        const topics = (repo.topics as string[]) || [];
+        const lang = repo.language as string | null;
+        const homepage = repo.homepage as string | undefined;
+        const name = repo.name as string;
+        const lower = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        return {
+          id: lower,
+          name,
+          fullName: `${USERNAME}/${name}`,
+          description: (repo.description as string) || '',
+          homepage: homepage || '',
+          htmlUrl: repo.html_url as string,
+          language: lang,
+          stars: repo.stargazers_count as number,
+          forks: repo.forks_count as number,
+          watchers: repo.watchers_count as number,
+          topics,
+          category: topics.length > 0 ? getCategoryFromTopics(topics) : getCategoryFromLanguage(lang),
+          isFeatured: isFeatured(name, repo.stargazers_count as number, !!homepage, topics),
+          isArchived: repo.archived as boolean,
+          createdAt: repo.created_at as string,
+          updatedAt: repo.updated_at as string,
+          pushedAt: repo.pushed_at as string,
+          deploymentUrl: homepage,
+          links: homepage ? { live: homepage } : undefined,
+          status: getStatus({ archived: repo.archived as boolean, homepage }),
+          techStack: buildTechStack(lang, topics),
+        } satisfies Project;
+      })
+      .filter((r: Project) => !contributedIds.includes(r.id));
+
+    return [...CONTRIBUTED_PROJECTS, ...originalRepos] as Project[];
   } catch (error) {
     console.error('Error fetching GitHub repos:', error);
     return [];
@@ -190,16 +255,13 @@ export async function fetchGitHubRepos(): Promise<Project[]> {
 }
 
 /**
- * Cache for GitHub data
+ * Cache
  */
 let cachedProfile: Awaited<ReturnType<typeof fetchGitHubProfile>> = null;
 let cachedRepos: Project[] = [];
 let lastFetch = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-/**
- * Get cached GitHub profile
- */
 export async function getGitHubProfile() {
   const now = Date.now();
   if (!cachedProfile || now - lastFetch > CACHE_DURATION) {
@@ -209,9 +271,6 @@ export async function getGitHubProfile() {
   return cachedProfile;
 }
 
-/**
- * Get cached repos
- */
 export async function getGitHubRepos() {
   const now = Date.now();
   if (cachedRepos.length === 0 || now - lastFetch > CACHE_DURATION) {
@@ -221,9 +280,6 @@ export async function getGitHubRepos() {
   return cachedRepos;
 }
 
-/**
- * Force refresh cache
- */
 export function invalidateCache() {
   cachedProfile = null;
   cachedRepos = [];

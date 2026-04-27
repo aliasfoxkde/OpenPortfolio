@@ -2,16 +2,14 @@
 
 /* ============================================
    OpenPortfolio - Design System
-   Tailwind CSS v4 + Custom CSS Variables
-   WCAG 2.5 AAA Compliant
+   Light/Dark Theme with System Support
    ============================================ */
 
-/* CSS Custom Properties (Design Tokens) */
 @theme {
-  /* Colors - Dark Mode Primary */
-  --color-background: #0a0a0f;
-  --color-background-alt: #12121a;
-  --color-background-elevated: #1a1a24;
+  /* Colors - Dark Mode */
+  --color-background: #09090b;
+  --color-background-alt: #18181b;
+  --color-background-elevated: #27272a;
   --color-foreground: #fafafa;
   --color-foreground-muted: #a1a1aa;
   --color-foreground-subtle: #71717a;
@@ -19,35 +17,36 @@
   /* Primary Brand */
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
-  --color-primary-glow: #818cf8;
   --color-primary-foreground: #ffffff;
 
-  /* Accent Colors */
+  /* Accent */
   --color-accent: #06b6d4;
-  --color-accent-hover: #0891b2;
-  --color-accent-glow: #22d3ee;
 
-  /* Semantic Colors */
+  /* Semantic */
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
 
-  /* Border Colors */
+  /* Borders */
   --color-border: #27272a;
   --color-border-hover: #3f3f46;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
 
-  /* Radius */
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-full: 9999px;
+/* Light mode overrides */
+.light {
+  --color-background: #ffffff;
+  --color-background-alt: #f4f4f5;
+  --color-background-elevated: #e4e4e7;
+  --color-foreground: #09090b;
+  --color-foreground-muted: #71717a;
+  --color-foreground-subtle: #a1a1aa;
+  --color-border: #e4e4e7;
+  --color-border-hover: #d4d4d8;
 }
 
 /* ============================================
@@ -57,7 +56,6 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
 }
 
 body {
@@ -70,19 +68,16 @@ body {
   line-height: 1.5;
 }
 
-/* Focus styles */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Selection */
 ::selection {
   background-color: var(--color-primary);
-  color: var(--color-primary-foreground);
+  color: white;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -94,40 +89,33 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: var(--radius-full);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-hover);
 }
 
-/* Links */
 a {
   color: var(--color-primary);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--color-primary-glow);
+  color: var(--color-primary-hover);
 }
 
-/* Images */
-img,
-picture,
-video,
-canvas,
-svg {
+img, picture, video, canvas, svg {
   max-width: 100%;
   display: block;
 }
 
-/* Buttons */
 button {
   cursor: pointer;
 }
 
 /* ============================================
-   Gradient Text Utility
+   Gradient Text
    ============================================ */
 
 .gradient-text {
@@ -135,38 +123,6 @@ button {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   -webkit-background-clip: text;
-}
-
-/* ============================================
-   3D Card Flip Animation (Critical)
-   ============================================ */
-
-.flip-card {
-  perspective: 1000px;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-style: preserve-3d;
-}
-
-.flip-card-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-.flip-card-front,
-.flip-card-back {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.flip-card-back {
-  transform: rotateY(180deg);
 }
 
 /* ============================================
@@ -180,18 +136,20 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.light .glass {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 /* ============================================
    Accessibility
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
   }
 }
 
