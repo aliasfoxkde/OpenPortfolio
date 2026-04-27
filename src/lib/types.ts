@@ -12,7 +12,9 @@ export type ProjectCategory =
   | 'tools'
   | 'games'
   | 'extensions'
-  | 'infrastructure';
+  | 'infrastructure'
+  | 'learning'
+  | 'templates';
 
 /**
  * Project interface representing a GitHub repository
@@ -44,7 +46,9 @@ export interface Project {
   /** Tech stack used in the project */
   techStack?: string[];
   /** Project status */
-  status?: 'live' | 'wip' | 'deprecated';
+  status?: 'live' | 'wip' | 'deprecated' | 'development' | 'archived';
+  /** Whether user contributed to this project (e.g., fork) */
+  isContributed?: boolean;
 }
 
 export interface ProjectLinks {

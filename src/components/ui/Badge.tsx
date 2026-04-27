@@ -131,7 +131,7 @@ CategoryBadge.displayName = 'CategoryBadge';
  * Status Badge - Shows project status (live, wip, deprecated)
  */
 interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  status: 'live' | 'wip' | 'deprecated';
+  status: 'live' | 'wip' | 'deprecated' | 'development' | 'archived';
   showLabel?: boolean;
 }
 
@@ -152,6 +152,16 @@ const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(
         color: 'bg-[var(--color-error)]',
         label: 'Deprecated',
         textColor: 'text-[var(--color-error)]',
+      },
+      development: {
+        color: 'bg-[var(--color-info)]',
+        label: 'In Dev',
+        textColor: 'text-[var(--color-info)]',
+      },
+      archived: {
+        color: 'bg-[var(--color-foreground-subtle)]',
+        label: 'Archived',
+        textColor: 'text-[var(--color-foreground-subtle)]',
       },
     };
 
