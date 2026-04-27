@@ -1,27 +1,48 @@
 // ============================================
 // OpenPortfolio - Projects Section
-// Simplified with proper Tailwind v4 classes
+// Dynamic loading with async/await
 // ============================================
 
-import { useState, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
+import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
 import { Badge, LanguageBadge, CategoryBadge, StatusBadge } from '@/components/ui/Badge';
-import { allProjects, projectCategories, githubProfile } from '@/data/projects';
+import { loadProjects, projectCategories, githubProfile } from '@/data/projects';
+import type { Project } from '@/lib/types';
 import { cn, formatNumber } from '@/lib/utils';
+
+// ============================================
+// Loading Skeleton
+// ============================================
+
+function ProjectSkeleton() {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5 h-full animate-pulse">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-5 w-20 bg-zinc-800 rounded-full" />
+        <div className="h-5 w-5 bg-zinc-800 rounded-full" />
+      </div>
+      <div className="h-6 w-3/4 bg-zinc-800 rounded mb-2" />
+      <div className="space-y-2 mb-3">
+        <div className="h-4 w-full bg-zinc-800 rounded" />
+        <div className="h-4 w-5/6 bg-zinc-800 rounded" />
+      </div>
+      <div className="flex gap-2 mb-4">
+        <div className="h-5 w-16 bg-zinc-800 rounded-full" />
+        <div className="h-5 w-16 bg-zinc-800 rounded-full" />
+      </div>
+      <div className="h-10 w-full bg-zinc-800 rounded-lg" />
+    </div>
+  );
+}
 
 // ============================================
 // Project Card Component
 // ============================================
 
-interface ProjectCardProps {
-  project: (typeof allProjects)[number];
-  index: number;
-}
-
-function ProjectCard({ project, index }: ProjectCardProps) {
+function ProjectCard({ project, index }: { project: Project; index: number }) {
   const categoryColor = projectCategories.find((c) => c.value === project.category)?.color;
 
   return (
@@ -42,6 +63,9 @@ function ProjectCard({ project, index }: ProjectCardProps) {
                 size="sm"
               />
               {project.status && <StatusBadge status={project.status} showLabel={false} />}
+              {project.isContributed && (
+                <Badge variant="secondary" size="sm">Contributor</Badge>
+              )}
             </div>
             <h3 className="text-lg font-semibold text-white truncate">
               {project.name}
@@ -51,19 +75,17 @@ function ProjectCard({ project, index }: ProjectCardProps) {
 
         {/* Description */}
         <p className="text-sm text-zinc-400 flex-1 line-clamp-3 mb-3">
-          {project.description}
+          {project.description || 'No description available'}
         </p>
 
-        {/* Tech Stack Tags */}
-        {project.techStack && project.techStack.length > 0 && (
+        {/* Topics */}
+        {project.topics && project.topics.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {project.techStack.slice(0, 3).map((tech) => (
-              <Badge key={tech} variant="default" size="sm">
-                {tech}
-              </Badge>
+            {project.topics.slice(0, 3).map((topic) => (
+              <Badge key={topic} variant="default" size="sm">{topic}</Badge>
             ))}
-            {project.techStack.length > 3 && (
-              <Badge variant="default" size="sm">+{project.techStack.length - 3}</Badge>
+            {project.topics.length > 3 && (
+              <Badge variant="default" size="sm">+{project.topics.length - 3}</Badge>
             )}
           </div>
         )}
@@ -208,17 +230,38 @@ function EmptyState({ onClear }: { onClear: () => void }) {
 // ============================================
 
 export function ProjectsSection() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchInput, setSearchInput] = useState('');
   const deferredSearch = useDeferredValue(searchInput);
   const [isPending, startTransition] = useTransition();
+
+  // Load projects on mount
+  useEffect(() => {
+    async function load() {
+      try {
+        setIsLoading(true);
+        const loadedProjects = await loadProjects();
+        setProjects(loadedProjects);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load projects');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    load();
+  }, []);
 
   const handleCategoryChange = useCallback((cat: string) => {
     startTransition(() => setSelectedCategory(cat));
   }, []);
 
   const filteredProjects = useMemo(() => {
-    return allProjects.filter((project) => {
+    return projects.filter((project) => {
       const categoryMatch = selectedCategory === 'all' || project.category === selectedCategory;
       
       if (!deferredSearch) return categoryMatch;
@@ -228,19 +271,19 @@ export function ProjectsSection() {
         project.name.toLowerCase().includes(search) ||
         project.description.toLowerCase().includes(search) ||
         project.language?.toLowerCase().includes(search) ||
-        project.topics.some((t) => t.toLowerCase().includes(search));
+        project.topics?.some((t) => t.toLowerCase().includes(search));
       
       return categoryMatch && searchMatch;
     });
-  }, [selectedCategory, deferredSearch]);
+  }, [projects, selectedCategory, deferredSearch]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allProjects.length };
+    const c: Record<string, number> = { all: projects.length };
     projectCategories.forEach((cat) => {
-      c[cat.value] = allProjects.filter((p) => p.category === cat.value).length;
+      c[cat.value] = projects.filter((p) => p.category === cat.value).length;
     });
     return c;
-  }, []);
+  }, [projects]);
 
   return (
     <section id="projects" className="relative py-16 bg-zinc-950" aria-label="Projects showcase">
@@ -263,7 +306,7 @@ export function ProjectsSection() {
             <span className="gradient-text">Featured Projects</span>
           </h2>
           <p className="text-base text-zinc-400 max-w-2xl mx-auto">
-            {allProjects.length} projects across AI/ML, web development, tools, and more.
+            {isLoading ? 'Loading projects...' : `${projects.length} projects across AI/ML, web development, tools, and more.`}
           </p>
         </motion.div>
 
@@ -277,7 +320,7 @@ export function ProjectsSection() {
         >
           <SearchInput value={searchInput} onChange={setSearchInput} />
           <div className={cn("text-sm text-zinc-500 transition-opacity", isPending ? "opacity-50" : "opacity-100")}>
-            {filteredProjects.length} of {allProjects.length} projects
+            {filteredProjects.length} {isLoading ? 'loading...' : `of ${projects.length} projects`}
           </div>
         </motion.div>
 
@@ -292,46 +335,68 @@ export function ProjectsSection() {
           <CategoryFilter selected={selectedCategory} onSelect={handleCategoryChange} counts={counts} />
         </motion.div>
 
-        {/* Grid */}
-        <AnimatePresence mode="wait">
-          {filteredProjects.length > 0 ? (
-            <motion.div
-              key={`${selectedCategory}-${deferredSearch}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-              {filteredProjects.map((project, index) => (
-                <ProjectCard key={project.id} project={project} index={index} />
-              ))}
-            </motion.div>
-          ) : (
-            <EmptyState onClear={() => setSearchInput('')} />
-          )}
-        </AnimatePresence>
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-8 text-red-400">
+            <Icon name="alert-circle" size={24} className="mx-auto mb-2" />
+            <p>{error}</p>
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => <ProjectSkeleton key={i} />)}
+          </div>
+        )}
+
+        {/* Projects Grid */}
+        {!isLoading && !error && (
+          <AnimatePresence mode="wait">
+            {filteredProjects.length > 0 ? (
+              <motion.div
+                key={`${selectedCategory}-${deferredSearch}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+              >
+                {filteredProjects.map((project, index) => (
+                  <ProjectCard key={project.id} project={project} index={index} />
+                ))}
+              </motion.div>
+            ) : (
+              <EmptyState onClear={() => setSearchInput('')} />
+            )}
+          </AnimatePresence>
+        )}
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-14 text-center"
-        >
-          <p className="text-sm text-zinc-500 mb-4">
-            Want to see all {githubProfile.publicRepos} repositories?
-          </p>
-          <Button
-            variant="outline"
-            size="md"
-            leftIcon={<Icon name="github" size={18} />}
-            onClick={() => window.open(githubProfile.htmlUrl, '_blank', 'noopener')}
+        {!isLoading && !error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-14 text-center"
           >
-            View All on GitHub
-          </Button>
-        </motion.div>
+            <p className="text-sm text-zinc-500 mb-4">
+              Want to see all {githubProfile.publicRepos} repositories?
+            </p>
+            <Button
+              variant="outline"
+              size="md"
+              leftIcon={<Icon name="github" size={18} />}
+              onClick={() => window.open(githubProfile.htmlUrl, '_blank', 'noopener')}
+            >
+              View All on GitHub
+            </Button>
+          </motion.div>
+        )}
       </Container>
     </section>
   );
