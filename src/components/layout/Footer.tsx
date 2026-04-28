@@ -21,19 +21,29 @@ function BackToTopButton() {
 
   return (
     <motion.button
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.8 }}
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={{ 
+        opacity: isVisible ? 1 : 0, 
+        scale: isVisible ? 1 : 0.8, 
+        y: isVisible ? 0 : 20 
+      }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.95 }}
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       className={cn(
-        "fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full",
-        "bg-indigo-500 text-white flex items-center justify-center",
-        "hover:bg-indigo-600 transition-colors shadow-lg shadow-indigo-500/30",
-        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950 focus:ring-indigo-500",
-        !isVisible && "pointer-events-none"
+        "fixed bottom-6 right-6 z-40 w-14 h-14",
+        "rounded-2xl",
+        "bg-gradient-to-br from-indigo-500 to-purple-600 text-white",
+        "flex items-center justify-center",
+        "shadow-xl shadow-indigo-500/40",
+        "border border-white/20",
+        "hover:shadow-2xl hover:shadow-indigo-500/60",
+        "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-50 dark:focus:ring-offset-zinc-950 focus:ring-indigo-500",
+        !isVisible && "pointer-events-none opacity-0"
       )}
       aria-label="Back to top"
     >
-      <Icon name="chevron-up" size={24} />
+      <Icon name="chevron-up" size={22} />
     </motion.button>
   );
 }

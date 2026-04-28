@@ -44,6 +44,19 @@ function ComputerIcon() {
 }
 
 // ============================================
+// Logo Icon
+// ============================================
+
+function LogoIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="6" fill="#6366f1"/>
+      <path d="M8 24L16 8L24 24M11 19H21" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+// ============================================
 // Theme Toggle
 // ============================================
 
@@ -73,7 +86,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-colors"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
       aria-label={`Current theme: ${getLabel()}. Click to change.`}
       title={`Theme: ${getLabel()}`}
     >
@@ -114,14 +127,14 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             onClick={onClose}
           />
           <motion.div
-            className="fixed inset-y-0 right-0 w-72 bg-zinc-950 dark:bg-zinc-950 border-l border-zinc-800 z-50 flex flex-col"
+            className="fixed inset-y-0 right-0 w-72 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 z-50 flex flex-col"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-              <span className="text-lg font-semibold text-white">Menu</span>
+            <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+              <span className="text-lg font-semibold text-zinc-900 dark:text-white">Menu</span>
               <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close menu">
                 <Icon name="x" size={24} />
               </Button>
@@ -133,7 +146,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                     <a
                       href={section.href}
                       onClick={onClose}
-                      className="flex items-center gap-3 p-3 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                     >
                       <Icon name={section.icon} size={20} />
                       <span>{section.name}</span>
@@ -142,7 +155,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
                 ))}
               </ul>
             </nav>
-            <div className="p-4 border-t border-zinc-800">
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
               <ThemeToggle />
             </div>
           </motion.div>
@@ -165,7 +178,7 @@ function SectionProgress({ progress }: { progress: number }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-48 w-1 bg-zinc-800 rounded-full overflow-hidden">
+      <div className="relative h-48 w-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
         <motion.div
           className="absolute bottom-0 left-0 w-full bg-indigo-500 rounded-full"
           style={{ height: `${progress}%` }}
@@ -174,7 +187,7 @@ function SectionProgress({ progress }: { progress: number }) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute right-6 flex flex-col gap-2 bg-zinc-900/90 p-2 rounded-lg"
+            className="absolute right-6 flex flex-col gap-2 bg-white dark:bg-zinc-900 p-2 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800"
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 10 }}
@@ -183,7 +196,7 @@ function SectionProgress({ progress }: { progress: number }) {
               <a
                 key={section.id}
                 href={section.href}
-                className="text-xs font-medium text-zinc-400 hover:text-white whitespace-nowrap"
+                className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white whitespace-nowrap"
               >
                 {section.name}
               </a>
@@ -196,7 +209,7 @@ function SectionProgress({ progress }: { progress: number }) {
           <a
             key={section.id}
             href={section.href}
-            className="w-2 h-2 rounded-full bg-zinc-700 hover:bg-zinc-500 transition-colors"
+            className="w-2 h-2 rounded-full bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-500 dark:hover:bg-zinc-500 transition-colors"
             title={section.name}
           />
         ))}
@@ -230,17 +243,15 @@ export function Header() {
       <header
         className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${
           isScrolled
-            ? 'bg-zinc-950/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-800'
+            ? 'bg-white/80 dark:bg-zinc-950/80 backdrop-blur-lg border-b border-zinc-200 dark:border-zinc-800'
             : 'bg-transparent'
         }`}
       >
         <Container size="lg">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <a href="#hero" className="flex items-center gap-3 text-white font-semibold">
-              <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center">
-                <span className="text-lg font-bold">M</span>
-              </div>
+            <a href="#hero" className="flex items-center gap-3 text-zinc-900 dark:text-white font-semibold">
+              <LogoIcon />
               <span className="hidden sm:inline">Micheal Kinney</span>
             </a>
 
@@ -250,7 +261,7 @@ export function Header() {
                 <a
                   key={section.id}
                   href={section.href}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                 >
                   {section.name}
                 </a>
@@ -259,10 +270,7 @@ export function Header() {
 
             {/* Right Side */}
             <div className="flex items-center gap-2">
-              {/* Theme Toggle */}
               <ThemeToggle />
-
-              {/* CTA */}
               <Button
                 variant="primary"
                 size="sm"
@@ -272,8 +280,6 @@ export function Header() {
                 <Icon name="github" size={16} />
                 <span>GitHub</span>
               </Button>
-
-              {/* Mobile Menu Button */}
               <Button
                 variant="ghost"
                 size="md"

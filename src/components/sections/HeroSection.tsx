@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Hero Section
-// Fixed avatar URL and Tailwind v4
+// Stylistic and interactive
 // ============================================
 
 import { useEffect, useRef, useState } from 'react';
@@ -17,6 +17,7 @@ import { formatNumber } from '@/lib/utils';
 
 function ParticleCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -33,56 +34,69 @@ function ParticleCanvas() {
     resize();
     window.addEventListener('resize', resize);
 
-    const colors = ['#6366f1', '#818cf8', '#06b6d4', '#22d3ee', '#a855f7'];
-    const particles: { x: number; y: number; vx: number; vy: number; r: number; color: string }[] = [];
+    const colors = ['#6366f1', '#818cf8', '#06b6d4', '#a855f7', '#ec4899'];
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; color: string; alpha: number }[] = [];
 
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < 100; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        r: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        r: Math.random() * 3 + 1,
         color: colors[Math.floor(Math.random() * colors.length)],
+        alpha: Math.random() * 0.5 + 0.3,
       });
     }
 
-    let mouseX = 0, mouseY = 0;
-    const handleMouseMove = (e: MouseEvent) => { mouseX = e.clientX; mouseY = e.clientY; };
-    window.addEventListener('mousemove', handleMouseMove);
+    const handleMouse = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouse);
 
     let animId: number;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach((p) => {
-        const dx = mouseX - p.x, dy = mouseY - p.y, dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 150) {
-          p.vx -= (dx / dist) * 0.02; p.vy -= (dy / dist) * 0.02;
+        const dx = mouseRef.current.x - p.x;
+        const dy = mouseRef.current.y - p.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 200) {
+          const force = (200 - dist) / 200;
+          p.vx -= (dx / dist) * force * 0.03;
+          p.vy -= (dy / dist) * force * 0.03;
         }
-        p.x += p.vx; p.y += p.vy;
+
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.x += p.vx;
+        p.y += p.vy;
+
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = p.alpha;
         ctx.fill();
 
         particles.forEach((p2) => {
           const d = Math.sqrt((p.x - p2.x) ** 2 + (p.y - p2.y) ** 2);
-          if (d < 120) {
+          if (d < 150) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
             ctx.strokeStyle = p.color;
-            ctx.globalAlpha = (1 - d / 120) * 0.2;
+            ctx.globalAlpha = (1 - d / 150) * 0.15;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
         });
       });
+
       ctx.globalAlpha = 1;
       animId = requestAnimationFrame(animate);
     };
@@ -91,24 +105,101 @@ function ParticleCanvas() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousemove', handleMouse);
     };
   }, []);
 
-  return (
-    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
-  );
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />;
 }
 
 // ============================================
-// Gradient Background (Reduced Motion)
+// Gradient Background
 // ============================================
 
 function GradientBackground() {
   return (
     <div className="absolute inset-0 w-full h-full" style={{
-      background: 'radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 70%)'
+      background: `
+        radial-gradient(ellipse at 15% 20%, rgba(99, 102, 241, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 60%)
+      `
     }} aria-hidden="true" />
+  );
+}
+
+// ============================================
+// Floating Orbs
+// ============================================
+
+function FloatingOrbs() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <motion.div
+        className="absolute w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/10 blur-3xl"
+        animate={{
+          x: [0, 50, -30, 0],
+          y: [0, -30, 50, 0],
+          scale: [1, 1.1, 0.9, 1],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ top: '10%', left: '5%' }}
+      />
+      <motion.div
+        className="absolute w-80 h-80 rounded-full bg-gradient-to-br from-cyan-500/15 to-blue-500/10 blur-3xl"
+        animate={{
+          x: [0, -40, 20, 0],
+          y: [0, 40, -20, 0],
+          scale: [1, 0.9, 1.1, 1],
+        }}
+        transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ bottom: '10%', right: '10%' }}
+      />
+      <motion.div
+        className="absolute w-64 h-64 rounded-full bg-gradient-to-br from-pink-500/10 to-purple-500/10 blur-3xl"
+        animate={{
+          x: [0, 30, -20, 0],
+          y: [0, 20, -30, 0],
+          scale: [1, 1.05, 0.95, 1],
+        }}
+        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ top: '50%', right: '20%' }}
+      />
+    </div>
+  );
+}
+
+// ============================================
+// Glowing Border Ring
+// ============================================
+
+function GlowingRing() {
+  return (
+    <motion.div
+      className="absolute inset-0 pointer-events-none"
+      aria-hidden="true"
+    >
+      <svg className="absolute inset-0 w-full h-full opacity-[0.03]">
+        <defs>
+          <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366f1" />
+            <stop offset="50%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+        <rect
+          x="1"
+          y="1"
+          width="calc(100% - 2px)"
+          height="calc(100% - 2px)"
+          fill="none"
+          stroke="url(#ringGradient)"
+          strokeWidth="2"
+          strokeDasharray="8 8"
+          className="animate-[spin_60s_linear_infinite]"
+        />
+      </svg>
+    </motion.div>
   );
 }
 
@@ -126,14 +217,12 @@ export function HeroSection() {
     followers: number;
     following: number;
     avatarUrl: string;
-    htmlUrl: string;
   } | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setIsReducedMotion(mq.matches);
 
-    // Fetch profile from GitHub API
     getGitHubProfile().then((p) => {
       if (p) setProfile(p as typeof profile);
     });
@@ -150,98 +239,139 @@ export function HeroSection() {
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-white dark:bg-zinc-950">
+      <div className="absolute inset-0 bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
         {isReducedMotion ? <GradientBackground /> : <ParticleCanvas />}
+        <FloatingOrbs />
+        <GlowingRing />
       </div>
 
-      {/* Noise overlay */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+      {/* Noise */}
+      <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
       }} />
 
       {/* Content */}
       <Container size="lg" className="relative z-10 py-20">
-        <div className="flex flex-col items-center text-center gap-8">
-          {/* Avatar */}
+        <div className="flex flex-col items-center text-center gap-10">
+          {/* Avatar with glow */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.8, type: 'spring', bounce: 0.5 }}
+            className="relative"
           >
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-indigo-500/30 dark:bg-indigo-500/30 blur-xl animate-pulse" />
+            {/* Glow rings */}
+            <motion.div
+              className="absolute -inset-8 rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+            >
+              <div className="w-full h-full rounded-full border-2 border-dashed border-indigo-500/30" />
+            </motion.div>
+            <motion.div
+              className="absolute -inset-4 rounded-full"
+              animate={{ rotate: -360 }}
+              transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+            >
+              <div className="w-full h-full rounded-full border border-purple-500/20" />
+            </motion.div>
+
+            {/* Avatar */}
+            <motion.div
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 blur-xl opacity-50" />
               <img
                 src={avatarUrl}
                 alt={`${name}'s avatar`}
-                className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-lg shadow-indigo-500/30 object-cover"
+                className="relative w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full border-4 border-white dark:border-zinc-800 shadow-2xl object-cover"
               />
-              <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-zinc-950 animate-pulse" />
-            </div>
+              {/* Status dot */}
+              <motion.div
+                className="absolute bottom-1 right-1 w-8 h-8 rounded-full border-4 border-white dark:border-zinc-800 bg-green-500"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </motion.div>
           </motion.div>
 
           {/* Name */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-zinc-900 dark:text-white"
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="space-y-2"
           >
-            {name}
-          </motion.h1>
-
-          {/* Username */}
-          <motion.p
-            className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <span className="text-indigo-500">@</span>{login}
-          </motion.p>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-zinc-900 via-indigo-600 to-purple-600 dark:from-white dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                {name}
+              </span>
+            </h1>
+            <motion.p
+              className="text-lg sm:text-xl md:text-2xl text-zinc-600 dark:text-zinc-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <span className="text-indigo-500">@</span>{login}
+            </motion.p>
+          </motion.div>
 
           {/* Bio */}
           <motion.p
-            className="max-w-2xl text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
+            className="max-w-3xl text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed"
           >
             {bio}
           </motion.p>
 
           {/* Stats */}
           <motion.div
-            className="flex flex-wrap justify-center gap-6 sm:gap-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-wrap justify-center gap-8 sm:gap-12"
           >
             {[
-              { label: 'Repos', value: publicRepos },
-              { label: 'Followers', value: followers },
-              { label: 'Following', value: following },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-indigo-500">
-                  {formatNumber(stat.value)}
+              { label: 'Repos', value: publicRepos, icon: 'folder' },
+              { label: 'Followers', value: followers, icon: 'users' },
+              { label: 'Following', value: following, icon: 'heart' },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + i * 0.1 }}
+                className="text-center group"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Icon name={stat.icon} size={18} className="text-indigo-500" />
+                  <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    {formatNumber(stat.value)}
+                  </span>
                 </div>
-                <div className="text-sm text-zinc-500 dark:text-zinc-400">{stat.label}</div>
-              </div>
+                <span className="text-sm text-zinc-500 dark:text-zinc-500">{stat.label}</span>
+              </motion.div>
             ))}
           </motion.div>
 
           {/* CTA Buttons */}
           <motion.div
-            className="flex flex-wrap justify-center gap-4 mt-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
+            transition={{ delay: 0.9 }}
+            className="flex flex-wrap justify-center gap-4 mt-4"
           >
             <Button
               variant="primary"
               size="lg"
               leftIcon={<Icon name="github" size={20} />}
               onClick={() => window.open(`https://github.com/${login}`, '_blank', 'noopener')}
+              className="shadow-lg shadow-indigo-500/30"
             >
               View on GitHub
             </Button>
@@ -250,6 +380,7 @@ export function HeroSection() {
               size="lg"
               leftIcon={<Icon name="folder" size={20} />}
               onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
+              className="border-2"
             >
               View Projects
             </Button>
@@ -262,11 +393,28 @@ export function HeroSection() {
               Contact Me
             </Button>
           </motion.div>
+
+          {/* Scroll indicator */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          >
+            <span className="text-xs text-zinc-400">Scroll to explore</span>
+            <motion.div
+              className="w-6 h-10 rounded-full border-2 border-zinc-300 dark:border-zinc-700 flex items-start justify-center p-1"
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <div className="w-1.5 h-3 rounded-full bg-indigo-500" />
+            </motion.div>
+          </motion.div>
         </div>
       </Container>
 
-      {/* Gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white dark:from-zinc-950 to-transparent" />
+      {/* Bottom gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent" />
     </section>
   );
 }
