@@ -1,5 +1,16 @@
 {
-  "name": "openportfolio",
-  "version": "1.0.0",
-  "id": "openportfolio"
+  "name": "Micheal L. C. Kinney Portfolio",
+  "short_name": "MLCK Portfolio",
+  "description": "Full-Stack Developer portfolio showcasing projects in AI/ML, React, TypeScript, and Cloudflare",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
