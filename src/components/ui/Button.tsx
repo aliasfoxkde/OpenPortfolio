@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Button Component
-// Fixed for Tailwind v4
+// Clean, accessible
 // ============================================
 
 import { forwardRef } from 'react';
@@ -30,17 +30,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 disabled:pointer-events-none disabled:opacity-50";
+      "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 dark:focus-visible:ring-offset-zinc-950 disabled:pointer-events-none disabled:opacity-50";
 
     const variants = {
       primary:
-        "bg-indigo-500 text-white hover:bg-indigo-600 focus-visible:ring-indigo-500 shadow-md hover:shadow-lg hover:shadow-indigo-500/20",
+        "bg-indigo-500 text-white hover:bg-indigo-600 focus-visible:ring-indigo-500 shadow-md",
       secondary:
-        "bg-zinc-900 text-white border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 focus-visible:ring-zinc-500",
+        "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border border-zinc-800 dark:border-zinc-300 hover:bg-zinc-800 dark:hover:bg-zinc-200 focus-visible:ring-zinc-500",
       outline:
         "border-2 border-indigo-500 text-indigo-500 bg-transparent hover:bg-indigo-500/10 focus-visible:ring-indigo-500",
       ghost:
-        "text-zinc-400 hover:text-white hover:bg-zinc-900 focus-visible:ring-zinc-500",
+        "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:ring-zinc-500",
     };
 
     const sizes = {
@@ -54,6 +54,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
+        aria-disabled={disabled || isLoading || undefined}
         {...props}
       >
         {isLoading ? (

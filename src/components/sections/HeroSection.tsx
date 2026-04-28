@@ -1,9 +1,9 @@
 // ============================================
 // OpenPortfolio - Hero Section
-// Full-screen interactive background
+// Clean with subtle cursor-following glow
 // ============================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
@@ -12,34 +12,46 @@ import { getGitHubProfile } from '@/lib/github';
 import { formatNumber } from '@/lib/utils';
 
 // ============================================
-// Interactive Gradient Background
+// Interactive Cursor Glow
 // ============================================
 
-function InteractiveBackground() {
-  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+function CursorGlow() {
+  const [position, setPosition] = useState({ x: -100, y: -100 });
+  const [isVisible, setIsVisible] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      setMousePos({ x, y });
+      setPosition({ x: e.clientX, y: e.clientY });
+      if (!isVisible) setIsVisible(true);
+      
+      // Hide glow after 2 seconds of no movement
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setIsVisible(false), 2000);
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [isVisible]);
 
   return (
-    <div 
-      className="absolute inset-0 w-full h-full transition-all duration-300 ease-out"
-      style={{
-        background: `
-          radial-gradient(ellipse at ${mousePos.x}% ${mousePos.y}%, rgba(99, 102, 241, 0.25) 0%, transparent 50%),
-          radial-gradient(ellipse at ${100 - mousePos.x}% ${100 - mousePos.y}%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 60%)
-        `
-      }}
-    />
+    <div
+      className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-500"
+      style={{ opacity: isVisible ? 1 : 0 }}
+    >
+      <div
+        className="absolute w-[400px] h-[400px] rounded-full"
+        style={{
+          left: position.x - 200,
+          top: position.y - 200,
+          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
+          filter: 'blur(40px)',
+        }}
+      />
+    </div>
   );
 }
 
@@ -59,7 +71,6 @@ export function HeroSection() {
   } | null>(null);
 
   useEffect(() => {
-
     getGitHubProfile().then((p) => {
       if (p) setProfile(p as typeof profile);
     });
@@ -75,9 +86,9 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background - full screen */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
-        <InteractiveBackground />
+        <CursorGlow />
       </div>
 
       {/* Noise overlay */}
@@ -94,13 +105,11 @@ export function HeroSection() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="relative">
-              <img
-                src={avatarUrl}
-                alt={`${name}'s avatar`}
-                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-lg shadow-indigo-500/30 object-cover"
-              />
-            </div>
+            <img
+              src={avatarUrl}
+              alt={`${name}'s avatar`}
+              className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-lg shadow-indigo-500/30 object-cover"
+            />
           </motion.div>
 
           {/* Name */}
@@ -110,10 +119,8 @@ export function HeroSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="space-y-2"
           >
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-zinc-900 via-indigo-600 to-purple-600 dark:from-white dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                {name}
-              </span>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {name}
             </h1>
             <motion.p
               className="text-lg sm:text-xl md:text-2xl text-zinc-600 dark:text-zinc-400"
@@ -150,7 +157,7 @@ export function HeroSection() {
               <div key={stat.label} className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Icon name={stat.icon} size={18} className="text-indigo-500" />
-                  <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+                  <span className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
                     {formatNumber(stat.value)}
                   </span>
                 </div>
@@ -171,7 +178,6 @@ export function HeroSection() {
               size="lg"
               leftIcon={<Icon name="github" size={20} />}
               onClick={() => window.open(`https://github.com/${login}`, '_blank', 'noopener')}
-              className="shadow-lg shadow-indigo-500/30"
             >
               View on GitHub
             </Button>
@@ -180,7 +186,6 @@ export function HeroSection() {
               size="lg"
               leftIcon={<Icon name="folder" size={20} />}
               onClick={() => document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' })}
-              className="border-2"
             >
               View Projects
             </Button>
@@ -199,10 +204,10 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
             <span className="text-xs text-zinc-400">Scroll to explore</span>
-            <div className="w-6 h-10 rounded-full border-2 border-zinc-300 dark:border-zinc-700 flex items-start justify-center p-1">
+            <div className="w-6 h-10 rounded-full border-2 border-zinc-300 dark:border-zinc-700 flex items-start justify-center p-1 mt-2">
               <div className="w-1.5 h-3 rounded-full bg-indigo-500" />
             </div>
           </motion.div>
