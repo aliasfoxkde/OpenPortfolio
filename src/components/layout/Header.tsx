@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Header Component
-// Clean and simple
+// Logo in upper left, clean and simple
 // ============================================
 
 import { useState, useEffect } from 'react';
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
+import { LogoIcon } from '@/components/ui/LogoIcon';
 import { useTheme } from '@/lib/theme';
 import { sections, githubProfile } from '@/data/projects';
 
@@ -70,7 +71,7 @@ function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           >
             <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
-              <span className="text-lg font-semibold">MLCK</span>
+              <LogoIcon size={24} />
               <Button variant="ghost" size="sm" onClick={onClose}>
                 <Icon name="x" size={24} />
               </Button>
@@ -119,9 +120,9 @@ export function Header() {
       }`}>
         <Container size="lg">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <a href="#hero" className="text-xl font-bold text-zinc-900 dark:text-white">
-              MLCK
+            {/* Logo - upper left */}
+            <a href="#hero" aria-label="Back to top">
+              <LogoIcon size={32} />
             </a>
 
             {/* Desktop Nav */}

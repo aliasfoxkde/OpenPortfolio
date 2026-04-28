@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Hero Section
-// Clean with cursor-interactive gradient
+// With particle canvas (user preferred version)
 // ============================================
 
 import { useEffect, useState } from 'react';
@@ -12,19 +12,110 @@ import { getGitHubProfile } from '@/lib/github';
 import { formatNumber } from '@/lib/utils';
 
 // ============================================
-// Interactive Gradient Background
+// Particle Canvas Background
+// ============================================
+
+function ParticleCanvas() {
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  useEffect(() => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.className = 'opacity-30';
+    
+    const container = document.querySelector('#hero > div') as HTMLElement;
+    if (container) container.style.position = 'relative';
+    container?.appendChild(canvas);
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const colors = ['#6366f1', '#818cf8', '#06b6d4', '#a855f7', '#ec4899'];
+    const particles: { x: number; y: number; vx: number; vy: number; r: number; color: string }[] = [];
+
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        r: Math.random() * 2 + 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+
+    const handleMouse = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      setMousePos({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouse, { passive: true });
+
+    let animId: number;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach((p) => {
+        const dx = mousePos.x - (p.x / canvas.width) * 100;
+        const dy = mousePos.y - (p.y / canvas.height) * 100;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 30) {
+          const force = (30 - dist) / 30;
+          p.vx -= (dx / dist) * force * 0.02;
+          p.vy -= (dy / dist) * force * 0.02;
+        }
+
+        p.vx *= 0.99;
+        p.vy *= 0.99;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
+      });
+
+      ctx.globalAlpha = 1;
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouse);
+      canvas.remove();
+    };
+  }, []);
+
+  return <canvas aria-hidden="true" />;
+}
+
+// ============================================
+// Gradient Background
 // ============================================
 
 function GradientBackground() {
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
-  const [isReducedMotion, setIsReducedMotion] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(mq.matches);
-
     const handleMouseMove = (e: MouseEvent) => {
-      if (isReducedMotion) return;
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
       setMousePos({ x, y });
@@ -32,7 +123,7 @@ function GradientBackground() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [isReducedMotion]);
+  }, []);
 
   return (
     <div 
@@ -81,6 +172,7 @@ export function HeroSection() {
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+        <ParticleCanvas />
         <GradientBackground />
       </div>
 

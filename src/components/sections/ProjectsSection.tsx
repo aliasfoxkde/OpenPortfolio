@@ -1,6 +1,6 @@
 // ============================================
 // OpenPortfolio - Projects Section
-// With flip animation and fixed styling
+// Clean with working flip cards
 // ============================================
 
 import { useState, useEffect, useMemo, useDeferredValue, useTransition, useCallback } from 'react';
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Container';
-import { Badge, LanguageBadge, CategoryBadge, StatusBadge } from '@/components/ui/Badge';
+import { Badge, LanguageBadge, StatusBadge } from '@/components/ui/Badge';
 import { loadProjects, projectCategories, githubProfile } from '@/data/projects';
 import { invalidateCache } from '@/lib/github';
 import type { Project } from '@/lib/types';
@@ -40,8 +40,6 @@ function ProjectSkeleton() {
 
 function ProjectCard({ project, index }: { project: Project; index: number }) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const categoryColor = projectCategories.find((c) => c.value === project.category)?.color;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,13 +51,9 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       {/* Flip Container */}
       <div
         className={cn(
-          "relative h-full min-h-[280px] cursor-pointer transition-transform duration-500",
-          isFlipped ? "rotate-y-180" : ""
+          "relative h-full min-h-[280px] cursor-pointer",
         )}
-        style={{
-          transformStyle: 'preserve-3d',
-          transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0)',
-        }}
+        style={{ transformStyle: 'preserve-3d' }}
         onClick={() => setIsFlipped(!isFlipped)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -74,20 +68,15 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       >
         {/* Front Face */}
         <div
-          className="absolute inset-0 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col backface-hidden"
-          style={{ backfaceVisibility: 'hidden' }}
+          className="absolute inset-0 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col"
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
         >
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <CategoryBadge
-                  category={projectCategories.find((c) => c.value === project.category)?.label || project.category}
-                  color={categoryColor}
-                  size="sm"
-                />
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="default" size="sm">{project.category}</Badge>
                 {project.status && <StatusBadge status={project.status} showLabel={false} />}
-                {project.isContributed && <Badge variant="secondary" size="sm">Contributor</Badge>}
               </div>
               <h3 className="text-lg font-semibold text-zinc-900 dark:text-white truncate">
                 {project.name}
@@ -135,8 +124,12 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
         {/* Back Face */}
         <div
-          className="absolute inset-0 rounded-xl border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 p-5 flex flex-col backface-hidden"
-          style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+          className="absolute inset-0 rounded-xl border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 p-5 flex flex-col"
+          style={{ 
+            backfaceVisibility: 'hidden', 
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)'
+          }}
         >
           {/* Tech Stack */}
           {project.techStack && project.techStack.length > 0 && (
@@ -206,7 +199,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
       {value && (
         <button
           onClick={() => onChange('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800"
+          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
           aria-label="Clear search"
         >
           <Icon name="x" size={14} />
@@ -223,23 +216,20 @@ function SearchInput({ value, onChange }: { value: string; onChange: (v: string)
 function SortDropdown({ value, onChange }: { value: SortOption; onChange: (v: SortOption) => void }) {
   const [open, setOpen] = useState(false);
 
-  const options: { value: SortOption; label: string; icon: string }[] = [
-    { value: 'recent', label: 'Recently Updated', icon: 'clock' },
-    { value: 'stars', label: 'Most Stars', icon: 'star' },
-    { value: 'forks', label: 'Most Forks', icon: 'fork' },
-    { value: 'name', label: 'Name (A-Z)', icon: 'list' },
+  const options: { value: SortOption; label: string }[] = [
+    { value: 'recent', label: 'Recently Updated' },
+    { value: 'stars', label: 'Most Stars' },
+    { value: 'forks', label: 'Most Forks' },
+    { value: 'name', label: 'Name (A-Z)' },
   ];
-
-  const current = options.find(o => o.value === value);
 
   return (
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300 hover:border-zinc-400 dark:hover:border-zinc-700 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm text-zinc-700 dark:text-zinc-300"
       >
-        <Icon name={current?.icon || 'list'} size={16} />
-        <span className="hidden sm:inline">{current?.label}</span>
+        <span className="hidden sm:inline">{options.find(o => o.value === value)?.label}</span>
         <Icon name="chevron-down" size={14} />
       </button>
       {open && (
@@ -251,13 +241,10 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (v: So
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setOpen(false); }}
                 className={cn(
-                  "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
-                  value === opt.value
-                    ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
-                    : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  "w-full px-3 py-2 text-sm text-left",
+                  value === opt.value ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600" : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                 )}
               >
-                <Icon name={opt.icon} size={14} />
                 {opt.label}
               </button>
             ))}
@@ -275,29 +262,25 @@ function SortDropdown({ value, onChange }: { value: SortOption; onChange: (v: So
 function CategoryFilter({ selected, onSelect, counts }: { selected: string; onSelect: (v: string) => void; counts: Record<string, number> }) {
   return (
     <div className="flex flex-wrap justify-center gap-2">
+      <button
+        onClick={() => onSelect('all')}
+        className={cn(
+          "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+          selected === 'all' ? "bg-indigo-500 text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+        )}
+      >
+        All ({counts.all || 0})
+      </button>
       {projectCategories.map((cat) => (
         <button
           key={cat.value}
           onClick={() => onSelect(cat.value)}
           className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border",
-            selected === cat.value
-              ? "bg-indigo-500 text-white border-indigo-500"
-              : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-300 dark:hover:border-zinc-700"
+            "px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
+            selected === cat.value ? "bg-indigo-500 text-white" : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
           )}
-          aria-pressed={selected === cat.value}
         >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: selected === cat.value ? 'white' : cat.color }}
-          />
-          <span>{cat.label}</span>
-          <span className={cn(
-            "px-1.5 py-0.5 rounded-full text-xs",
-            selected === cat.value ? "bg-white/20" : "bg-zinc-100 dark:bg-zinc-800"
-          )}>
-            {counts[cat.value] || 0}
-          </span>
+          {cat.label} ({counts[cat.value] || 0})
         </button>
       ))}
     </div>
@@ -404,12 +387,10 @@ export function ProjectsSection() {
   }, [projects]);
 
   return (
-    <section id="projects" className="relative py-16 bg-zinc-50 dark:bg-zinc-950" aria-label="Projects showcase">
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #6366f1 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-
+    <section id="projects" className="relative py-16 bg-zinc-50 dark:bg-zinc-950">
       <Container size="xl">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="text-center mb-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="gradient-text">Featured Projects</span>
           </h2>
@@ -424,15 +405,14 @@ export function ProjectsSection() {
         </motion.div>
 
         {/* Toolbar */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 }} className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
           <SearchInput value={searchInput} onChange={setSearchInput} />
           <div className="flex items-center gap-3">
             <SortDropdown value={sortBy} onChange={setSortBy} />
             <button
               onClick={handleRefresh}
-              className="p-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-700 transition-colors"
+              className="p-2 rounded-lg border border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400"
               aria-label="Refresh projects"
-              title="Refresh from GitHub"
             >
               <Icon name="refresh" size={18} className={isLoading ? 'animate-spin' : ''} />
             </button>
@@ -440,19 +420,18 @@ export function ProjectsSection() {
         </motion.div>
 
         {/* Filters */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.2 }} className="mb-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mb-10">
           <CategoryFilter selected={selectedCategory} onSelect={handleCategoryChange} counts={counts} />
         </motion.div>
 
         {/* Result count */}
-        <div className={cn("text-sm text-zinc-500 dark:text-zinc-400 mb-4 transition-opacity", isPending ? "opacity-50" : "opacity-100")}>
+        <div className={cn("text-sm text-zinc-500 dark:text-zinc-400 mb-4", isPending ? "opacity-50" : "opacity-100")}>
           {filteredProjects.length} {isLoading ? 'loading...' : `of ${projects.length} projects`}
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="text-center py-8 text-red-500 dark:text-red-400">
-            <Icon name="alert-circle" size={24} className="mx-auto mb-2" />
+          <div className="text-center py-8 text-red-500">
             <p>{error}</p>
             <Button variant="outline" size="sm" className="mt-4" onClick={handleRefresh}>Retry</Button>
           </div>
@@ -474,7 +453,6 @@ export function ProjectsSection() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
               >
                 {filteredProjects.map((project, index) => (
@@ -489,7 +467,7 @@ export function ProjectsSection() {
 
         {/* CTA */}
         {!isLoading && !error && (
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-14 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-14 text-center">
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
               Want to see all {githubProfile.publicRepos} repositories?
             </p>
